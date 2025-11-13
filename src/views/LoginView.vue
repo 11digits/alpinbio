@@ -13,6 +13,36 @@
         <p class="mt-2 text-sm text-slate-500">Introduceți detaliile pentru a accesa facturile și plățile.</p>
       </div>
 
+      <div class="mb-6 space-y-3 rounded-2xl bg-emerald-50/80 p-5 text-left text-sm text-emerald-800">
+        <h2 class="text-base font-semibold text-emerald-900">Pași de autentificare</h2>
+        <ol class="space-y-3">
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-0.5 inline-flex h-6 w-6 flex-none items-center justify-center rounded-full bg-white text-xs font-semibold text-emerald-600 shadow"
+            >
+              1
+            </span>
+            <span><strong>Introdu numărul facturii</strong> primit pe e-mail sau pe suport fizic.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-0.5 inline-flex h-6 w-6 flex-none items-center justify-center rounded-full bg-white text-xs font-semibold text-emerald-600 shadow"
+            >
+              2
+            </span>
+            <span><strong>Confirmă numele complet</strong> exact ca în documentele oficiale pentru validare.</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span
+              class="mt-0.5 inline-flex h-6 w-6 flex-none items-center justify-center rounded-full bg-white text-xs font-semibold text-emerald-600 shadow"
+            >
+              3
+            </span>
+            <span><strong>Accesează tabloul de bord</strong> pentru a vedea și achita facturile în siguranță.</span>
+          </li>
+        </ol>
+      </div>
+
       <form class="space-y-5" @submit.prevent="handleSubmit">
         <div>
           <label class="text-sm font-medium text-slate-600" for="invoice">Număr factură</label>
