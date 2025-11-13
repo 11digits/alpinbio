@@ -108,10 +108,9 @@
         </button>
       </form>
 
-      <div class="mt-8 flex flex-col gap-1 text-center text-xs text-slate-400">
-        <a href="#" class="hover:text-emerald-600">Politica de confidențialitate</a>
-        <a href="#" class="hover:text-emerald-600">Termeni și condiții</a>
-      </div>
+      <p class="mt-8 text-center text-xs text-slate-400">
+        Versiune aplicație {{ appVersion }}
+      </p>
     </div>
   </div>
 </template>
@@ -123,6 +122,8 @@ import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+const appVersion = __APP_VERSION__
 
 const form = reactive({
   invoiceNumber: authStore.invoiceNumber ?? '',

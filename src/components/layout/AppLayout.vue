@@ -28,6 +28,9 @@
           </RouterLink>
         </nav>
       </div>
+      <div class="px-6 py-6 border-t border-slate-100 text-xs text-slate-400">
+        Versiune aplicație {{ appVersion }}
+      </div>
     </aside>
 
     <div class="flex min-h-screen flex-1 flex-col">
@@ -118,6 +121,7 @@ const navigation = [
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const appVersion = __APP_VERSION__
 
 const customerName = computed(() => authStore.customer?.name ?? 'Client Alpin Bio')
 const customerEmail = computed(() => authStore.customer?.email ?? 'Email indisponibil')
