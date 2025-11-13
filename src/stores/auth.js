@@ -105,7 +105,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   const customer = ref(stored?.customer ?? null)
   const invoices = ref((stored?.invoices ?? []).map(normalizeInvoice))
-  console.log(invoices.value);
   const activeInvoice = ref(stored?.activeInvoice ? normalizeInvoice(stored.activeInvoice) : null)
   const verified = ref(Boolean(stored?.verified))
   const invoiceNumber = ref(stored?.invoiceNumber ?? '')
