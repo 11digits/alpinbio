@@ -65,17 +65,21 @@ function normalizeInvoice(invoice) {
 
   const amount = Number.parseFloat(invoice.amount ?? invoice.balance ?? 0) || 0
   const balance = Number.parseFloat(invoice.balance ?? amount) || 0
-  const status = deriveStatus(invoice.status, balance)
+  const status = deriveStatus(invoice.status, invoice.due_at, balance)
 
   return {
-    ...invoice,
+    id: invoice.id,
+    number: invoice.number ?? invoice.id,
+    customerId: invoice.customerId || invoice.customer_id,
+    issueDate: invoice.issueDate || invoice.issued_at,
+    dueDate: invoice.dueDate || invoice.due_at,
     amount,
     balance,
     status
   }
 }
 
-function deriveStatus(apiStatus, balance) {
+function deriveStatus(apiStatus, dueDate, balance) {
   if (apiStatus === 'paid' || balance <= 0) {
     return 'paid'
   }
@@ -101,6 +105,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const customer = ref(stored?.customer ?? null)
   const invoices = ref((stored?.invoices ?? []).map(normalizeInvoice))
+  console.log(invoices.value);
   const activeInvoice = ref(stored?.activeInvoice ? normalizeInvoice(stored.activeInvoice) : null)
   const verified = ref(Boolean(stored?.verified))
   const invoiceNumber = ref(stored?.invoiceNumber ?? '')
