@@ -91,42 +91,56 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 text-slate-600">
-            <tr
-              v-for="invoice in filteredInvoices"
-              :key="invoice.id"
-              class="transition hover:bg-emerald-50/50"
-            >
-              <td class="px-4 py-3">
-                <input
-                  type="checkbox"
-                  class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  :checked="selectedInvoices.includes(invoice.id)"
-                  @change="toggleInvoice(invoice.id)"
-                />
-              </td>
-              <td class="px-4 py-3 font-semibold text-slate-900">{{ invoice.number }}</td>
-              <td class="px-4 py-3">{{ formatDate(invoice.issueDate) }}</td>
-              <td class="px-4 py-3 font-semibold text-slate-900">{{ formatCurrency(invoice.amount) }}</td>
-              <td class="px-4 py-3">
-                <span
-                  class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
-                  :class="statusClasses(statusMeta(invoice.status).tone)"
-                >
-                  <span class="h-2 w-2 rounded-full" :class="dotClasses(statusMeta(invoice.status).tone)"></span>
-                  {{ statusMeta(invoice.status).label }}
-                </span>
-              </td>
-              <td class="px-4 py-3">{{ formatDate(invoice.dueDate) }}</td>
-              <td class="px-4 py-3 text-right">
-                <RouterLink
-                  :to="`/invoices/${invoice.id}/pay`"
-                  class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50"
-                >
-                  Plătește
-                  <ArrowRightIcon class="h-4 w-4" />
-                </RouterLink>
+            <tr v-if="isLoading" class="transition">
+              <td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500">
+                Se încarcă facturile...
               </td>
             </tr>
+            <template v-else>
+              <template v-if="filteredInvoices.length === 0">
+                <tr class="transition">
+                  <td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500">
+                    Nu există facturi care să corespundă filtrării curente.
+                  </td>
+                </tr>
+              </template>
+              <tr
+                v-for="invoice in filteredInvoices"
+                :key="invoice.id"
+                class="transition hover:bg-emerald-50/50"
+              >
+                <td class="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    :checked="selectedInvoices.includes(invoice.id)"
+                    @change="toggleInvoice(invoice.id)"
+                  />
+                </td>
+                <td class="px-4 py-3 font-semibold text-slate-900">{{ invoice.number }}</td>
+                <td class="px-4 py-3">{{ formatDate(invoice.issueDate) }}</td>
+                <td class="px-4 py-3 font-semibold text-slate-900">{{ formatCurrency(invoice.amount) }}</td>
+                <td class="px-4 py-3">
+                  <span
+                    class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
+                    :class="statusClasses(statusMeta(invoice.status).tone)"
+                  >
+                    <span class="h-2 w-2 rounded-full" :class="dotClasses(statusMeta(invoice.status).tone)"></span>
+                    {{ statusMeta(invoice.status).label }}
+                  </span>
+                </td>
+                <td class="px-4 py-3">{{ formatDate(invoice.dueDate) }}</td>
+                <td class="px-4 py-3 text-right">
+                  <RouterLink
+                    :to="`/invoices/${invoice.id}/pay`"
+                    class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50"
+                  >
+                    Plătește
+                    <ArrowRightIcon class="h-4 w-4" />
+                  </RouterLink>
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>
@@ -150,7 +164,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
   ArrowRightIcon,
@@ -161,17 +175,22 @@ import {
   FunnelIcon,
   MagnifyingGlassIcon
 } from '@heroicons/vue/24/outline'
-import { invoices } from '@/data/invoices'
+import { useAuthStore } from '@/stores/auth'
 import { formatCurrency, formatDate, statusMeta } from '@/utils/formatters'
+
+const authStore = useAuthStore()
 
 const searchTerm = ref('')
 const statusFilter = ref('all')
 const sortField = ref('dueDate')
 const selectedInvoices = ref([])
 
+const allInvoices = computed(() => authStore.invoices)
+
 const filteredInvoices = computed(() => {
   const search = searchTerm.value.trim().toLowerCase()
-  return invoices
+
+  return allInvoices.value
     .filter((invoice) => {
       const matchesSearch =
         !search ||
@@ -192,7 +211,7 @@ const filteredInvoices = computed(() => {
 
 const selectedTotal = computed(() =>
   selectedInvoices.value.reduce((total, invoiceId) => {
-    const invoice = invoices.find((item) => item.id === invoiceId)
+    const invoice = allInvoices.value.find((item) => item.id === invoiceId)
     return invoice ? total + invoice.amount : total
   }, 0)
 )
@@ -201,6 +220,20 @@ const sortLabel = computed(() => (sortField.value === 'amount' ? 'Valoare' : 'Da
 const areAllVisibleSelected = computed(
   () => filteredInvoices.value.length > 0 && filteredInvoices.value.every((invoice) => selectedInvoices.value.includes(invoice.id))
 )
+
+const isLoading = computed(() => authStore.isLoading)
+
+onMounted(() => {
+  if (!authStore.invoices.length) {
+    authStore.refreshInvoices().catch(() => {
+      // erorile sunt gestionate în store
+    })
+  }
+})
+
+watch(allInvoices, () => {
+  selectedInvoices.value = selectedInvoices.value.filter((id) => allInvoices.value.some((invoice) => invoice.id === id))
+})
 
 function toggleSort() {
   sortField.value = sortField.value === 'amount' ? 'dueDate' : 'amount'
