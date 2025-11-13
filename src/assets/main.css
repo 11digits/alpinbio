@@ -1,0 +1,45 @@
+@import "tailwindcss/theme" layer(theme);
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: "Trebuchet MS", sans-serif;
+  }
+}
+
+* {
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+/* Fix for mobile viewport height issues */
+.h-dvh {
+  height: 100dvh; /* dynamic viewport height */
+}
+.min-h-dvh {
+  min-height: 100dvh;
+}
+
+html, body {
+  overscroll-behavior: none;
+}
+
+body {
+  left: 0;
+  top: 0;
+  position: fixed;
+  padding: 0;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app {
+  height:100%;
+  width:100%;
+  overflow: auto;
+}

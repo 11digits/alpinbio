@@ -1,0 +1,298 @@
+{
+  "common": {
+    "appName": "TotalClean Track",
+    "languages": {
+      "en": "🇺🇸 EN",
+      "ro": "🇷🇴 RO",
+      "hu": "🇭🇺 HU",
+      "pk": "🇵🇰 PK",
+      "np": "🇳🇵 NP",
+      "fr": "🇫🇷 FR",
+      "uk": "🇺🇦 UA"
+    },
+    "pwa": {
+      "update": {
+        "title": "Mise à jour disponible",
+        "text": "Une nouvelle version de l'application est prête. Recharger maintenant ?",
+        "confirm": "Recharger",
+        "cancel": "Plus tard"
+      },
+      "offlineReady": "L'application est prête pour une utilisation hors ligne"
+    },
+    "buttons": {
+      "login": ">",
+      "scanQr": "Scanner le QR",
+      "stopScan": "Arrêter le scan",
+      "addPhotos": "Ajouter des photos",
+      "remove": "Supprimer",
+      "startTask": "Commencer la tâche",
+      "finalizeTask": "Finaliser la tâche",
+      "logout": "Déconnexion",
+      "back": "Retour",
+      "open": "Ouvrir",
+      "close": "Fermer"
+    },
+    "placeholders": {
+      "notes": "Notes..."
+    },
+    "qrDetails": {
+      "title": "Détails du code QR",
+      "description": "Description",
+      "value": "Valeur du code"
+    }
+  },
+  "topbar": {
+    "titles": {
+      "home": "TotalClean Track",
+      "startTask": "Commencer la tâche de nettoyage",
+      "finalizeTask": "Finaliser la tâche de nettoyage",
+      "options": "Paramètres",
+      "otherTasks": "Voir et reprendre les tâches",
+      "zoneDetail": "Zone : {zone}",
+      "defaultZone": "Zone"
+    },
+    "languageSelectorLabel": "Choisir la langue"
+  },
+  "login": {
+    "subtitle": "Saisissez votre code PIN à 4 chiffres",
+    "invalidPinTitle": "PIN invalide",
+    "invalidPinText": "PIN invalide. Veuillez réessayer.",
+    "successTitle": "Connexion réussie",
+    "successText": "Vous êtes maintenant connecté"
+  },
+  "home": {
+    "extraOptions": "Options supplémentaires",
+    "logoutConfirm": {
+      "title": "Êtes-vous sûr ?",
+      "text": "Vous allez être déconnecté.",
+      "confirm": "Oui, déconnexion",
+      "cancel": "Annuler"
+    },
+    "syncStatus": {
+      "online": "En ligne",
+      "offline": "Hors ligne",
+      "label": "File de synchronisation :",
+      "pendingNone": "Toutes les données sont synchronisées",
+      "pendingSingle": "1 élément en attente de synchronisation",
+      "pendingPlural": "{count} éléments en attente de synchronisation"
+    },
+    "activeBadge": "En cours",
+    "zones": "Zones",
+    "zoneProgress": "{completed} sur {total} tâches terminées aujourd'hui",
+    "noOperationsHint": "Aucune opération n'est encore affectée à cette zone. L'ouverture est désactivée jusqu'à l'ajout de tâches.",
+    "noOperationsButton": "Aucune opération disponible",
+    "dailyReport": {
+      "button": "Rapport quotidien",
+      "title": "Rapport quotidien",
+      "unavailable": "Impossible de générer le lien du rapport. Veuillez réessayer plus tard.",
+      "selectOperatorLabel": "Voir le rapport pour l'opérateur",
+      "selectOperatorPlaceholder": "Sélectionnez un opérateur",
+      "loadingOperators": "Chargement des opérateurs...",
+      "operatorFetchError": "Impossible de charger les opérateurs. Veuillez réessayer."
+    },
+    "activeQr": {
+      "description": "Description du QR : {description}",
+      "value": "Valeur du QR : {value}"
+    },
+    "emptyState": {
+      "title": "Aucune zone disponible",
+      "description": "Aucune zone assignée avec des tâches pour le moment. Contactez votre responsable si vous pensiez voir des zones ici."
+    },
+    "taskGroups": {
+      "mainOfficeFloor": {
+        "title": "Étage principal du bureau",
+        "tasks": {
+          "dailyVacuuming": "Aspiration quotidienne",
+          "trashDisposal": "Collecte des déchets",
+          "surfaceWiping": "Essuyage des surfaces"
+        }
+      },
+      "kitchenArea": {
+        "title": "Zone cuisine",
+        "tasks": {
+          "countertopDisinfection": "Désinfection du plan de travail",
+          "applianceCleaning": "Nettoyage des appareils"
+        }
+      },
+      "restroomsFirstFloor": {
+        "title": "Sanitaires - 1er étage",
+        "tasks": {
+          "toiletSanitization": "Désinfection des toilettes",
+          "floorMopping": "Nettoyage du sol",
+          "refillSupplies": "Réassort des fournitures"
+        }
+      },
+      "conferenceRoom": {
+        "title": "Salle de conférence 3",
+        "tasks": {
+          "tableWiping": "Nettoyage de la table",
+          "whiteboardCleaning": "Nettoyage du tableau blanc"
+        }
+      }
+    }
+  },
+  "statuses": {
+    "pending": "En attente",
+    "inProgress": "En cours",
+    "completed": "Terminé"
+  },
+  "bottomNav": {
+    "home": "Accueil",
+    "start": "Démarrer",
+    "active": "Zone active",
+    "finalize": "Finaliser",
+    "options": "Paramètres"
+  },
+  "startTask": {
+    "instructions": "Scannez le code QR de la zone pour commencer.",
+    "placeholder": "Appuyez sur « Scanner le QR » pour lancer la lecture.",
+    "noZones": {
+      "title": "Aucune zone disponible",
+      "text": "Aucune zone assignée avec des opérations n'est disponible pour démarrer. Veuillez contacter votre superviseur."
+    },
+    "activeZone": {
+      "title": "Zone en cours",
+      "contract": "Contrat : {contract}",
+      "startedAt": "Début : {time}",
+      "elapsed": "Écoulé : {time}"
+    },
+    "activeStatus": {
+      "label": "Active",
+      "hint": "La lecture de QR est désactivée tant qu'une zone est active."
+    },
+    "buttons": {
+      "scan": "Scanner pour démarrer la zone",
+      "stop": "Arrêter le scan de démarrage"
+    },
+    "operations": {
+      "title": "Opérations",
+      "hint": "Touchez une opération pour la marquer comme effectuée.",
+      "empty": "Aucune opération disponible pour cette zone.",
+      "progress": "{done} / {total} effectuées"
+    },
+    "finalizeCta": {
+      "title": "Prêt à finaliser ?",
+      "description": "Collectez les preuves SOP et envoyez-les une fois la liste terminée.",
+      "button": "Aller à Finaliser la tâche"
+    },
+    "success": {
+      "title": "Code QR scanné",
+      "text": "Vous avez commencé à travailler sur {qr} dans {zone}."
+    },
+    "error": {
+      "title": "Erreur du scanner",
+      "text": "Impossible de lire le code QR."
+    },
+    "errors": {
+      "unknown": {
+        "title": "Zone inconnue",
+        "text": "Ce code QR n'est associé à aucune zone assignée."
+      },
+      "noOperations": {
+        "title": "Pas de tâches pour cette zone",
+        "text": "{zone} n'a aucune opération assignée, elle ne peut pas être démarrée."
+      },
+      "generic": {
+        "title": "Impossible de démarrer",
+        "text": "Une erreur est survenue lors du démarrage de la zone. Veuillez réessayer."
+      }
+    },
+    "warnings": {
+      "busy": {
+        "title": "Zone déjà en cours",
+        "text": "Terminez {active} avant de démarrer {target}."
+      }
+    },
+    "headers": {
+      "instructions": {
+        "defaultTitle": "Préparez-vous à démarrer une zone",
+        "activeTitle": "Terminez d'abord la zone en cours",
+        "noZonesTitle": "Aucune zone disponible au démarrage"
+      }
+    },
+    "alreadyActive": {
+      "title": "Déjà démarrée",
+      "text": "Vous avez déjà {zone} en cours."
+    }
+  },
+  "finalizeTask": {
+    "instructions": "Démarrez une zone pour activer le processus SOP.",
+    "instructionsActive": "Scannez le code QR pour finaliser {zone}.",
+    "placeholder": "Appuyez sur « Scanner le QR » pour finaliser.",
+    "headers": {
+      "instructions": {
+        "defaultTitle": "Préparez la finalisation d'une zone",
+        "activeTitle": "Finalisez la zone active"
+      }
+    },
+    "success": {
+      "title": "Tâche finalisée",
+      "text": "{zone} a été marquée comme terminée.",
+      "summary": {
+        "title": "Résumé des opérations pour la zone actuelle",
+        "zone": "Zone",
+        "contract": "Contrat",
+        "startedAt": "Début",
+        "completedAt": "Fin",
+        "duration": "Durée",
+        "operations": "Opérations",
+        "operationsValue": "{done} sur {total}",
+        "comment": "Commentaire"
+      }
+    },
+    "error": {
+      "title": "Erreur du scanner",
+      "text": "Impossible de lire le code QR."
+    },
+    "errors": {
+      "mismatch": {
+        "title": "Zone différente",
+        "text": "Le code QR scanné ne correspond pas à {zone}."
+      },
+      "generic": {
+        "title": "Impossible de finaliser",
+        "text": "Une erreur est survenue lors de la finalisation. Veuillez réessayer."
+      }
+    },
+    "noActiveZone": {
+      "title": "Aucune zone active",
+      "text": "Démarrez une zone avant de collecter des preuves SOP."
+    },
+    "activeZone": {
+      "title": "Zone prête pour SOP",
+      "contract": "Contrat : {contract}",
+      "startedAt": "Début : {time}",
+      "elapsed": "Écoulé : {time}"
+    },
+    "buttons": {
+      "scan": "Scanner pour finaliser la zone",
+      "stop": "Arrêter le scan de finalisation"
+    },
+    "startShortcut": {
+      "title": "Besoin de démarrer une zone ?",
+      "description": "Allez directement au scanner Démarrer la tâche pour lancer une nouvelle session de nettoyage.",
+      "button": "Aller à Démarrer la tâche"
+    },
+    "photos": {
+      "title": "Photos",
+      "empty": "Ajoutez des photos ou prenez des images comme preuve pour cette zone."
+    },
+    "commentLabel": "Commentaire"
+  },
+  "options": {
+    "title": "Paramètres",
+    "pinPrompt": "Saisissez le code PIN administrateur à 4 chiffres pour déverrouiller les paramètres.",
+    "pinLabel": "PIN de sécurité",
+    "pinPlaceholder": "Saisissez le PIN",
+    "unlockButton": "Déverrouiller les paramètres",
+    "invalidPin": "PIN incorrect. Veuillez réessayer.",
+    "unlockedMessage": "Les paramètres sont déverrouillés. Les options de configuration apparaîtront ici bientôt.",
+    "lockButton": "Verrouiller les paramètres",
+    "contracts": "Contrats",
+    "tasks": "Opérations"
+  },
+  "otherTasks": {
+    "title": "Opérateurs",
+    "taskSummary": "{total} tâches ({unassigned} non assignées)"
+  }
+}
