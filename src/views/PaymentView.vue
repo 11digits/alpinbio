@@ -157,7 +157,8 @@
 
           <button
             type="button"
-            class="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
+            class="w-full rounded-xl bg-emerald-600 px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
+            :disabled="true"
             @click="startExternalPayment"
           >
             Continuă către plata securizată

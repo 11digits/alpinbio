@@ -171,14 +171,16 @@
           Facturi selectate: <span class="font-semibold">{{ selectedInvoices.length }}</span>
           — Total de plată: <span class="font-semibold">{{ formatCurrency(selectedTotal) }}</span>
         </div>
-        <RouterLink
-          :to="payLink"
-          class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-200"
-          :class="{ 'opacity-50': selectedInvoices.length === 0 }"
+        <button
+          type="button"
+          :disabled="selectedInvoices.length === 0"
+          @click="selectedInvoices.length > 0 ? $router.push(payLink) : null"
+          class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white shadow-sm transition
+                hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-200 disabled:opacity-50"
         >
           <CheckCircleIcon class="h-5 w-5" />
           Plătește facturile selectate
-        </RouterLink>
+        </button>
       </div>
     </section>
   </div>
