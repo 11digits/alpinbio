@@ -95,18 +95,20 @@
   </div>
 
   <nav class="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white shadow-lg/5 lg:hidden">
-    <ul class="flex items-center justify-around py-2">
-      <li v-for="item in navigation" :key="item.to">
-        <RouterLink
-          :to="item.to"
-          class="flex flex-col items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium"
-          :class="isActive(item.to) ? 'text-emerald-600' : 'text-slate-500'"
-        >
-          <component :is="item.icon" class="h-5 w-5" />
-          <span>{{ item.mobileName || item.name }}</span>
-        </RouterLink>
-      </li>
-    </ul>
+    <div class="mx-auto w-full max-w-6xl px-4">
+      <ul class="flex list-none items-center justify-between gap-2 py-2">
+        <li v-for="item in navigation" :key="item.to" class="flex-1">
+          <RouterLink
+            :to="item.to"
+            class="flex w-full flex-col items-center gap-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors"
+            :class="isActive(item.to) ? 'text-emerald-600' : 'text-slate-500 hover:text-emerald-600'"
+          >
+            <component :is="item.icon" class="h-5 w-5" />
+            <span class="truncate">{{ item.mobileName || item.name }}</span>
+          </RouterLink>
+        </li>
+      </ul>
+    </div>
   </nav>
 </template>
 
