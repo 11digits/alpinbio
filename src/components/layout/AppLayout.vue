@@ -33,8 +33,10 @@
 
     <div class="flex min-h-screen flex-1 flex-col">
       <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200">
-        <div class="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div class="flex h-16 items-center justify-between">
+        <div class="px-4 sm:px-6">
+          <div class="flex h-16 items-center justify-between lg:justify-end w-full lg:max-w-6xl lg:mx-auto lg:px-8">
+
+            <!-- Left side (mobile only) -->
             <div class="flex items-center gap-3 lg:hidden">
               <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-white text-lg font-semibold">
                 AB
@@ -45,6 +47,7 @@
               </div>
             </div>
 
+            <!-- Right user block -->
             <div class="flex items-center gap-3">
               <div class="hidden sm:flex flex-col text-right">
                 <span class="text-sm font-semibold text-slate-900">Client Premium</span>
@@ -54,20 +57,20 @@
                 CP
               </div>
             </div>
-          </div>
 
+          </div>
         </div>
       </header>
 
-      <main class="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-24 pt-6 sm:px-6 lg:px-8 lg:pb-12">
+      <main class="flex w-full max-w-full flex-1 flex-col px-4 pb-24 pt-6 sm:px-6 lg:max-w-6xl lg:mx-auto lg:px-8 lg:pb-12">
         <slot />
       </main>
     </div>
   </div>
 
-  <nav class="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white shadow-lg/5 lg:hidden">
-    <div class="mx-auto w-full px-4 pb-[env(safe-area-inset-bottom)]">
-      <ul class="grid grid-cols-3 list-none items-center gap-1 py-2">
+  <nav class="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white shadow-inner lg:hidden box-border">
+    <div class="mx-auto w-full pb-[env(safe-area-inset-bottom)] box-border">
+      <ul class="grid grid-cols-3 list-none items-center py-2 p-0 m-0">
         <li v-for="item in navigation" :key="item.to" class="flex-1">
           <RouterLink
             :to="item.to"
@@ -81,6 +84,7 @@
       </ul>
     </div>
   </nav>
+
 </template>
 
 <script setup>

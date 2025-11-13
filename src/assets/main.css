@@ -32,3 +32,9 @@ body {
 #app {
   min-height: 100vh;
 }
+
+*, *::before, *::after {
+    -webkit-box-sizing: border-box; /* Safari/Chrome */
+    -moz-box-sizing: border-box;    /* Old Firefox */
+    box-sizing: border-box;         /* Standard */
+}
