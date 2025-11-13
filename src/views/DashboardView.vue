@@ -47,7 +47,7 @@
         <h3 class="text-lg font-semibold text-slate-900">Servicii rapide</h3>
         <p class="mt-1 text-sm text-slate-500">Ultimele actualizări {{ lastUpdateLabel }}</p>
 
-        <ul class="mt-4 space-y-3">
+        <ul class="mt-4 space-y-3 list-none p-0 m-0">
           <li
             v-for="service in quickServices"
             :key="service.label"
