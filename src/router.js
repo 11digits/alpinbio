@@ -10,7 +10,7 @@ const router = createRouter({
     { path: '/', name: 'login', component: LoginView, alias: ['/login'] },
     { path: '/dashboard', name: 'dashboard', component: DashboardView },
     { path: '/invoices', name: 'invoices', component: InvoicesView },
-    { path: '/invoices/:id/pay', name: 'invoice-pay', component: PaymentView },
+    { path: '/pay/:id', name: 'invoice-pay', component: PaymentView },
     { path: '/pay', name: 'pay', component: PaymentView }
   ],
   scrollBehavior() {

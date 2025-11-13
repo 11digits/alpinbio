@@ -124,15 +124,17 @@
               <tr
                 v-for="invoice in filteredInvoices"
                 :key="invoice.id"
-                class="transition hover:bg-emerald-50/50"
+                class="transition hover:bg-emerald-50/50 cursor-pointer"
+                @click="invoice.status === 'unpaid' && toggleInvoice(invoice.id)"
               >
-                <td class="px-4 py-3">
+                <td class="px-4 py-3" @click.stop>
                   <input
                     v-if="invoice.status === 'unpaid'"
                     type="checkbox"
                     class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     :checked="selectedInvoices.includes(invoice.id)"
                     @change="toggleInvoice(invoice.id)"
+                    @click.stop
                   />
                 </td>
                 <td class="px-4 py-3 font-semibold text-slate-900">{{ invoice.number }}</td>
@@ -151,7 +153,7 @@
                 <td class="px-4 py-3 text-right">
                   <RouterLink
                     v-if="invoice.status === 'unpaid'"
-                    :to="`/invoices/${invoice.id}/pay`"
+                    :to="`/pay/${invoice.id}`"
                     class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50"
                   >
                     Plătește
@@ -273,6 +275,12 @@ const selectedTotal = computed(() =>
     return invoice ? total + invoice.balance : total
   }, 0)
 )
+
+function onRowClick(invoice) {
+  if (invoice.status === 'unpaid') {
+    router.push(`/invoices/${invoice.id}/pay`)
+  }
+}
 
 const payLink = computed(() => {
   if (selectedInvoices.value.length === 0) {

@@ -71,7 +71,7 @@
             {{ errorMessage }}
           </div>
 
-          <ul class="space-y-4">
+          <ul class="space-y-4 list-none p-0 m-0">
             <li
               v-for="invoice in selectedInvoices"
               :key="invoice.id"
@@ -103,10 +103,10 @@
                   {{ statusMeta(invoice.status).label }}
                 </span>
                 <RouterLink
-                  :to="`/invoices/${invoice.id}/pay`"
+                  :to="`/pay/${invoice.id}`"
                   class="inline-flex items-center gap-2 font-semibold text-emerald-600 transition hover:text-emerald-700"
                 >
-                  Detalii factură
+                  Plateste doar aceasta factură
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     class="h-3.5 w-3.5"
