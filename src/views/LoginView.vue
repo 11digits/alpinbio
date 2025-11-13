@@ -32,14 +32,6 @@
             </span>
             <span><strong>Confirmă numele complet</strong> exact ca în documentele oficiale pentru validare.</span>
           </li>
-          <li class="flex items-start gap-3">
-            <span
-              class="mt-0.5 inline-flex h-6 w-6 flex-none items-center justify-center rounded-full bg-white text-xs font-semibold text-emerald-600 shadow"
-            >
-              3
-            </span>
-            <span><strong>Accesează tabloul de bord</strong> pentru a vedea și achita facturile în siguranță.</span>
-          </li>
         </ol>
       </div>
 
