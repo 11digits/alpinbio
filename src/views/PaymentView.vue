@@ -1,7 +1,26 @@
 <template>
   <div class="space-y-6">
     <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
-      <div class="flex flex-col gap-6 lg:flex-row">
+      <div
+        v-if="isLoading"
+        class="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-6 text-center text-sm text-emerald-700"
+      >
+        Se încarcă detaliile facturii selectate...
+      </div>
+      <div v-else-if="errorMessage" class="space-y-4 rounded-2xl border border-rose-200 bg-rose-50/40 p-6 text-sm text-rose-700">
+        <p>{{ errorMessage }}</p>
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-lg border border-rose-300 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100"
+          @click="loadInvoice(defaultInvoiceId)"
+        >
+          Reîncearcă încărcarea facturii
+        </button>
+      </div>
+      <div v-else-if="!currentInvoice" class="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+        Nu există facturi disponibile pentru plată în acest moment.
+      </div>
+      <div v-else class="flex flex-col gap-6 lg:flex-row">
         <div class="flex-1 rounded-2xl bg-slate-50 p-6">
           <h2 class="text-lg font-semibold text-slate-900">Detalii Factură</h2>
           <dl class="mt-4 space-y-3 text-sm text-slate-600">
@@ -74,19 +93,86 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { invoices } from '@/data/invoices'
+import { useAuthStore } from '@/stores/auth'
+import { getErrorMessage } from '@/utils/api'
 import { formatCurrency, formatDate, statusMeta } from '@/utils/formatters'
 
 const route = useRoute()
+const authStore = useAuthStore()
 
-const currentInvoice = computed(() => {
-  const invoiceId = route.params.id
-  return invoices.find((invoice) => invoice.id === invoiceId) ?? invoices[0]
+const invoice = ref(null)
+const isLoading = ref(false)
+const errorMessage = ref(null)
+
+const defaultInvoiceId = computed(() => {
+  if (route.params.id) {
+    return route.params.id
+  }
+
+  const unpaid = authStore.invoices.find((item) => item.status !== 'paid')
+  return unpaid?.id ?? authStore.invoices[0]?.id ?? authStore.activeInvoice?.id ?? null
 })
 
+const currentInvoice = computed(() => {
+  if (invoice.value) {
+    return invoice.value
+  }
+
+  const fromStore = authStore.invoices.find(
+    (item) => item.id === defaultInvoiceId.value || item.number === defaultInvoiceId.value
+  )
+
+  return fromStore ?? authStore.activeInvoice ?? null
+})
+
+async function loadInvoice(id) {
+  if (!id) {
+    invoice.value = null
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = null
+
+  try {
+    const data = await authStore.fetchInvoice(id)
+    invoice.value = data
+  } catch (error) {
+    errorMessage.value = getErrorMessage(error, 'Factura selectată nu a putut fi încărcată.')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(async () => {
+  if (!authStore.invoices.length) {
+    await authStore.refreshInvoices().catch(() => {
+      // erorile sunt gestionate în store
+    })
+  }
+
+  await loadInvoice(defaultInvoiceId.value)
+})
+
+watch(
+  () => route.params.id,
+  async (newId) => {
+    if (newId) {
+      await loadInvoice(newId)
+    } else if (defaultInvoiceId.value) {
+      await loadInvoice(defaultInvoiceId.value)
+    }
+  }
+)
+
 function startExternalPayment() {
+  if (!currentInvoice.value) {
+    errorMessage.value = 'Selectează o factură înainte de a continua plata.'
+    return
+  }
+
   window.alert(
     `Vei fi redirecționat către pagina securizată pentru plata facturii ${currentInvoice.value.number} în valoare de ${formatCurrency(currentInvoice.value.amount)}.`
   )

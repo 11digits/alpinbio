@@ -4,7 +4,7 @@
       <div class="rounded-3xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-6 text-white shadow-xl">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p class="text-sm font-medium uppercase tracking-wide text-emerald-100">Bun venit, Client!</p>
+            <p class="text-sm font-medium uppercase tracking-wide text-emerald-100">Bun venit, {{ welcomeName }}!</p>
             <h2 class="mt-1 text-3xl font-semibold">Balanța disponibilă</h2>
             <p class="mt-2 text-4xl font-bold">{{ formatCurrency(availableBalance) }}</p>
           </div>
@@ -12,7 +12,7 @@
             <p class="font-semibold">Status cont</p>
             <p class="mt-1 flex items-center gap-2 text-emerald-100">
               <span class="inline-flex h-2 w-2 rounded-full bg-emerald-200"></span>
-              Actualizat la {{ lastUpdate }}
+              Actualizat {{ lastUpdateLabel }}
             </p>
           </div>
         </div>
@@ -35,7 +35,7 @@
 
       <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
         <h3 class="text-lg font-semibold text-slate-900">Servicii rapide</h3>
-        <p class="mt-1 text-sm text-slate-500">Ultimele actualizări la {{ lastUpdate }}</p>
+        <p class="mt-1 text-sm text-slate-500">Ultimele actualizări {{ lastUpdateLabel }}</p>
 
         <ul class="mt-4 space-y-3">
           <li
@@ -106,14 +106,18 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { ArrowRightIcon, DocumentTextIcon, CreditCardIcon, ChartBarIcon } from '@heroicons/vue/24/outline'
-import { invoices } from '@/data/invoices'
+import { useAuthStore } from '@/stores/auth'
 import { formatCurrency, formatDate, statusMeta } from '@/utils/formatters'
 
-const availableBalance = 5320.5
-const lastUpdate = '30 martie 2024, 15:30'
+const authStore = useAuthStore()
+
+const dateTimeFormatter = new Intl.DateTimeFormat('ro-RO', {
+  dateStyle: 'long',
+  timeStyle: 'short'
+})
 
 const quickActions = [
   { label: 'Facturile mele', cta: 'Vezi toate', to: '/invoices', icon: DocumentTextIcon },
@@ -138,7 +142,48 @@ const quickServices = [
   }
 ]
 
-const latestInvoices = computed(() => invoices.slice(0, 6))
+const welcomeName = computed(() => {
+  const fullName = authStore.customer?.name?.trim()
+  if (!fullName) {
+    return 'client'
+  }
+
+  const [first] = fullName.split(/\s+/)
+  if (!first) {
+    return 'client'
+  }
+
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase()
+})
+
+const availableBalance = computed(() => authStore.outstandingBalance)
+
+const latestInvoices = computed(() =>
+  [...authStore.invoices]
+    .sort((a, b) => new Date(b.issueDate) - new Date(a.issueDate))
+    .slice(0, 6)
+)
+
+const lastUpdateLabel = computed(() => {
+  if (!authStore.lastSyncedAt) {
+    return 'recent'
+  }
+
+  const date = new Date(authStore.lastSyncedAt)
+  if (Number.isNaN(date.getTime())) {
+    return 'recent'
+  }
+
+  return `la ${dateTimeFormatter.format(date)}`
+})
+
+onMounted(() => {
+  if (!authStore.invoices.length) {
+    authStore.refreshInvoices().catch(() => {
+      // erorile sunt gestionate în store
+    })
+  }
+})
 
 function statusClasses(tone) {
   switch (tone) {

@@ -50,12 +50,26 @@
             <!-- Right user block -->
             <div class="flex items-center gap-3">
               <div class="hidden sm:flex flex-col text-right">
-                <span class="text-sm font-semibold text-slate-900">Client Premium</span>
-                <span class="text-xs text-slate-500">client@alpinbio.ro</span>
+                <span class="text-sm font-semibold text-slate-900">{{ customerName }}</span>
+                <span class="text-xs text-slate-500">{{ customerEmail }}</span>
               </div>
-              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-semibold">
-                CP
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold">
+                {{ customerInitials }}
               </div>
+              <button
+                type="button"
+                class="hidden rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-emerald-300 hover:text-emerald-600 sm:inline-flex"
+                @click="handleLogout"
+              >
+                Deconectare
+              </button>
+              <button
+                type="button"
+                class="inline-flex rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-emerald-300 hover:text-emerald-600 sm:hidden"
+                @click="handleLogout"
+              >
+                Ieșire
+              </button>
             </div>
 
           </div>
@@ -88,12 +102,14 @@
 </template>
 
 <script setup>
-import { useRoute, RouterLink } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 import {
   HomeIcon,
   DocumentTextIcon,
   CreditCardIcon
 } from '@heroicons/vue/24/outline'
+import { useAuthStore } from '@/stores/auth'
 
 const navigation = [
   { name: 'Dashboard', mobileName: 'Acasă', to: '/dashboard', icon: HomeIcon },
@@ -102,11 +118,31 @@ const navigation = [
 ]
 
 const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+
+const customerName = computed(() => authStore.customer?.name ?? 'Client Alpin Bio')
+const customerEmail = computed(() => authStore.customer?.email ?? 'Email indisponibil')
+const customerInitials = computed(() => {
+  const source = authStore.customer?.name ?? authStore.customer?.email ?? 'AB'
+  return source
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('') || 'AB'
+})
+
 const isActive = (target) => {
   if (target === '/pay' && route.name === 'invoice-pay') {
     return true
   }
 
   return route.path === target || route.path.startsWith(`${target}/`)
+}
+
+function handleLogout() {
+  authStore.logout()
+  router.replace({ name: 'login' })
 }
 </script>

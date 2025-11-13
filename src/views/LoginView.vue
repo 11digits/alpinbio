@@ -9,55 +9,66 @@
         <p class="mt-2 text-sm text-slate-500">Introduceți detaliile pentru a accesa facturile și plățile.</p>
       </div>
 
-      <form class="space-y-4" @submit.prevent="handleLogin">
+      <form class="space-y-5" @submit.prevent="handleSubmit">
         <div>
-          <label class="text-sm font-medium text-slate-600" for="invoice">Nr factură existentă</label>
-          <input
-            id="invoice"
-            v-model="form.invoiceNumber"
-            type="text"
-            required
-            placeholder="Introduceți numărul facturii"
-            class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          />
+          <label class="text-sm font-medium text-slate-600" for="invoice">Număr factură</label>
+          <div class="mt-1 flex flex-col gap-2 sm:flex-row">
+            <input
+              id="invoice"
+              v-model="form.invoiceNumber"
+              type="text"
+              :disabled="authStore.isLoading || hasVerifiedInvoice"
+              required
+              placeholder="Introduceți numărul facturii"
+              class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:bg-slate-100"
+            />
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-xl border border-emerald-200 px-4 py-3 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+              :disabled="!form.invoiceNumber || authStore.isLoading || hasVerifiedInvoice"
+              @click="lookupInvoice"
+            >
+              Verifică factura
+            </button>
+          </div>
+          <p v-if="authStore.invoiceError" class="mt-2 text-sm text-rose-600">{{ authStore.invoiceError }}</p>
         </div>
 
-        <div>
-          <label class="text-sm font-medium text-slate-600" for="phone">Nr telefon</label>
-          <input
-            id="phone"
-            v-model="form.phone"
-            type="tel"
-            required
-            placeholder="Introduceți numărul de telefon"
-            class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          />
-        </div>
-
-        <div>
-          <label class="text-sm font-medium text-slate-600" for="code">Cod SMS</label>
-          <input
-            id="code"
-            v-model="form.smsCode"
-            type="text"
-            required
-            placeholder="Introduceți codul SMS"
-            class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-          />
-        </div>
-
-        <div class="flex items-center justify-between text-sm">
-          <button type="button" class="font-semibold text-emerald-600 hover:text-emerald-700" @click="requestCode">
-            Re-trimite cod SMS
+        <div v-if="hasVerifiedInvoice" class="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <p>
+            Factura aparține clientului
+            <span class="font-semibold">{{ authStore.maskedCustomerName }}</span>.
+          </p>
+          <p class="mt-1">Completează numele complet pentru a continua autentificarea.</p>
+          <button
+            type="button"
+            class="mt-2 text-xs font-semibold text-emerald-700 underline decoration-dotted hover:text-emerald-800"
+            @click="resetInvoice"
+          >
+            Schimbă factura introdusă
           </button>
-          <span class="text-slate-400">Necesită verificare în 2 pași</span>
+        </div>
+
+        <div v-if="hasVerifiedInvoice">
+          <label class="text-sm font-medium text-slate-600" for="full-name">Nume complet</label>
+          <input
+            id="full-name"
+            v-model="form.fullName"
+            type="text"
+            :disabled="authStore.isLoading"
+            required
+            placeholder="Scrie numele complet exact ca pe factură"
+            class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:bg-slate-100"
+          />
+          <p v-if="authStore.verificationError" class="mt-2 text-sm text-rose-600">{{ authStore.verificationError }}</p>
         </div>
 
         <button
           type="submit"
-          class="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
+          class="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-200"
+          :disabled="authStore.isLoading || !canSubmit"
         >
-          Autentificare
+          {{ hasVerifiedInvoice ? 'Autentificare' : 'Verifică factura' }}
         </button>
       </form>
 
@@ -70,21 +81,81 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
+
 const form = reactive({
-  invoiceNumber: '',
-  phone: '',
-  smsCode: ''
+  invoiceNumber: authStore.invoiceNumber ?? '',
+  fullName: ''
 })
 
-function handleLogin() {
-  router.push('/dashboard')
+const hasVerifiedInvoice = computed(() => Boolean(authStore.customer))
+const canSubmit = computed(() => {
+  if (!hasVerifiedInvoice.value) {
+    return Boolean(form.invoiceNumber)
+  }
+
+  return Boolean(form.fullName.trim())
+})
+
+watch(
+  () => authStore.invoiceNumber,
+  (value) => {
+    if (value && !form.invoiceNumber) {
+      form.invoiceNumber = value
+    }
+  },
+  { immediate: true }
+)
+
+watch(
+  () => form.invoiceNumber,
+  () => {
+    if (authStore.invoiceError) {
+      authStore.invoiceError = null
+    }
+  }
+)
+
+watch(
+  () => form.fullName,
+  () => {
+    if (authStore.verificationError) {
+      authStore.verificationError = null
+    }
+  }
+)
+
+async function lookupInvoice() {
+  if (!form.invoiceNumber) {
+    return
+  }
+
+  const success = await authStore.lookupInvoice(form.invoiceNumber)
+  if (success) {
+    form.fullName = ''
+  }
 }
 
-function requestCode() {
-  window.alert('Un nou cod a fost trimis către numărul de telefon introdus.')
+async function handleSubmit() {
+  if (!hasVerifiedInvoice.value) {
+    await lookupInvoice()
+    return
+  }
+
+  if (authStore.verifyCustomerName(form.fullName)) {
+    await authStore.refreshInvoices()
+    router.push({ name: 'dashboard' })
+  }
+}
+
+function resetInvoice() {
+  authStore.logout()
+  form.invoiceNumber = ''
+  form.fullName = ''
 }
 </script>
