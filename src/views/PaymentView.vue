@@ -1,9 +1,9 @@
 <template>
-  <div class="space-y-6">
-    <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+  <div class="space-y-6 animate-fade-slide">
+    <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 animate-fade-slide">
       <div
         v-if="isLoading"
-        class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-6 text-sm text-emerald-700"
+        class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-6 text-sm text-emerald-700 animate-fade-slide"
       >
         <svg
           class="h-6 w-6 animate-spin text-emerald-600"
@@ -19,7 +19,8 @@
 
       <div
         v-else-if="!hasSelection"
-        class="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-600"
+        class="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-600 animate-fade-slide"
+        style="animation-delay: .1s"
       >
         <h2 class="text-lg font-semibold text-slate-900">Nu ai selectat încă nicio factură</h2>
         <p>
@@ -35,7 +36,8 @@
 
       <div
         v-else-if="selectedInvoices.length === 0"
-        class="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-6 text-sm text-amber-700"
+        class="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-6 text-sm text-amber-700 animate-fade-slide"
+        style="animation-delay: .2s"
       >
         <p>Nu am reușit să încărcăm detaliile facturilor selectate.</p>
         <div class="flex flex-wrap gap-3">
@@ -55,7 +57,7 @@
         </div>
       </div>
 
-      <div v-else class="flex flex-col gap-6 lg:flex-row">
+      <div v-else class="flex flex-col gap-6 lg:flex-row animate-fade-slide" style="animation-delay: .1s">
         <div class="flex-1 space-y-5">
           <div>
             <h2 class="text-lg font-semibold text-slate-900">Facturi selectate</h2>
@@ -66,16 +68,17 @@
 
           <div
             v-if="errorMessage"
-            class="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-700"
+            class="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-700 animate-fade-slide"
           >
             {{ errorMessage }}
           </div>
 
           <ul class="space-y-4 list-none p-0 m-0">
             <li
-              v-for="invoice in selectedInvoices"
+              v-for="(invoice, index) in selectedInvoices"
               :key="invoice.id"
-              class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-slide"
+              :style="{ animationDelay: `${index * 70}ms` }"
             >
               <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -122,7 +125,10 @@
           </ul>
         </div>
 
-        <div class="w-full max-w-sm space-y-5 rounded-2xl border border-slate-100 p-6">
+        <div
+          class="w-full max-w-sm space-y-5 rounded-2xl border border-slate-100 p-6 animate-fade-slide"
+          style="animation-delay: .2s"
+        >
           <h2 class="text-lg font-semibold text-slate-900">Sumar plată</h2>
           <dl class="space-y-4 text-sm text-slate-600">
             <div class="flex items-center justify-between">
