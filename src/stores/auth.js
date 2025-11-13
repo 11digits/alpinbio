@@ -63,8 +63,8 @@ function maskName(name) {
 function normalizeInvoice(invoice) {
   if (!invoice) return null
 
-  const amount = Number.parseFloat(invoice.amount ?? invoice.balance ?? 0) || 0
-  const balance = Number.parseFloat(invoice.balance ?? amount) || 0
+  const amount = Number.parseFloat(invoice.amount ?? 0) || 0
+  const balance = Number.parseFloat(invoice.balance ?? 0) || 0
   const status = deriveStatus(invoice.status, invoice.due_at, balance)
 
   return {

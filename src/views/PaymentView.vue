@@ -86,7 +86,7 @@
                 </div>
                 <div class="text-sm text-slate-500 sm:text-right">
                   <p class="text-base font-semibold text-slate-900">
-                    {{ formatCurrency(invoice.amount) }}
+                    {{ formatCurrency(invoice.balance) }}
                   </p>
                   <p class="mt-1">Scadență: {{ formatDate(invoice.dueDate) }}</p>
                 </div>
@@ -234,8 +234,8 @@ const hasSelection = computed(() => selectedInvoiceIds.value.length > 0)
 const selectedCount = computed(() => selectedInvoices.value.length)
 const selectedTotal = computed(() =>
   selectedInvoices.value.reduce((total, invoice) => {
-    const amount = Number.isFinite(invoice.amount) ? invoice.amount : 0
-    return total + amount
+    const balance = Number.isFinite(invoice.balance) ? invoice.balance : 0
+    return total + balance
   }, 0)
 )
 
@@ -357,7 +357,7 @@ function startExternalPayment() {
     const invoice = selectedInvoices.value[0]
     window.alert(
       `Vei fi redirecționat către pagina securizată pentru plata facturii ${invoice.number} în valoare de ${formatCurrency(
-        invoice.amount
+        invoice.balance
       )}.`
     )
     return

@@ -74,7 +74,7 @@
               :checked="areAllVisibleSelected"
               @change="toggleSelectAll"
             />
-            Selectează tot ({{ filteredInvoices.length }} facturi)
+            Selectează tot ({{ unpaidVisibleCount }} facturi)
           </label>
         </div>
         <div class="text-sm text-slate-500">
@@ -128,6 +128,7 @@
               >
                 <td class="px-4 py-3">
                   <input
+                    v-if="invoice.status === 'unpaid'"
                     type="checkbox"
                     class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     :checked="selectedInvoices.includes(invoice.id)"
@@ -136,7 +137,7 @@
                 </td>
                 <td class="px-4 py-3 font-semibold text-slate-900">{{ invoice.number }}</td>
                 <td class="px-4 py-3">{{ formatDate(invoice.issueDate) }}</td>
-                <td class="px-4 py-3 font-semibold text-slate-900">{{ formatCurrency(invoice.amount) }}</td>
+                <td class="px-4 py-3 font-semibold text-slate-900">{{ formatCurrency(invoice.balance) }}</td>
                 <td class="px-4 py-3">
                   <span
                     class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
@@ -149,6 +150,7 @@
                 <td class="px-4 py-3">{{ formatDate(invoice.dueDate) }}</td>
                 <td class="px-4 py-3 text-right">
                   <RouterLink
+                    v-if="invoice.status === 'unpaid'"
                     :to="`/invoices/${invoice.id}/pay`"
                     class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50"
                   >
@@ -212,9 +214,13 @@ const dateRangeOptions = [
 
 const allowedStatuses = ['all', 'paid', 'unpaid']
 const allowedRanges = ['60', 'all']
-const allowedSorts = ['issueDate', 'amount']
+const allowedSorts = ['issueDate', 'balance']
 
 const allInvoices = computed(() => authStore.invoices)
+
+const unpaidVisibleCount = computed(() =>
+  filteredInvoices.value.filter(i => i.status === 'unpaid').length
+)
 
 const filteredInvoices = computed(() => {
   const search = searchTerm.value.trim().toLowerCase()
@@ -248,8 +254,8 @@ const filteredInvoices = computed(() => {
       return matchesSearch && matchesStatus && matchesRange
     })
     .sort((a, b) => {
-      if (sortField.value === 'amount') {
-        return b.amount - a.amount
+      if (sortField.value === 'balance') {
+        return b.balance - a.balance
       }
 
       const dateA = new Date(a.issueDate)
@@ -264,7 +270,7 @@ const filteredInvoices = computed(() => {
 const selectedTotal = computed(() =>
   selectedInvoices.value.reduce((total, invoiceId) => {
     const invoice = allInvoices.value.find((item) => item.id === invoiceId)
-    return invoice ? total + invoice.amount : total
+    return invoice ? total + invoice.balance : total
   }, 0)
 )
 
@@ -279,10 +285,12 @@ const payLink = computed(() => {
   }
 })
 
-const sortLabel = computed(() => (sortField.value === 'amount' ? 'Valoare' : 'Dată factură'))
-const areAllVisibleSelected = computed(
-  () => filteredInvoices.value.length > 0 && filteredInvoices.value.every((invoice) => selectedInvoices.value.includes(invoice.id))
-)
+const sortLabel = computed(() => (sortField.value === 'balance' ? 'Valoare' : 'Dată factură'))
+const areAllVisibleSelected = computed(() => {
+  const unpaidVisible = filteredInvoices.value.filter(i => i.status === 'unpaid')
+  return unpaidVisible.length > 0 &&
+         unpaidVisible.every((invoice) => selectedInvoices.value.includes(invoice.id))
+})
 
 const isLoading = computed(() => authStore.isLoading)
 
@@ -360,7 +368,7 @@ watch(allInvoices, () => {
 })
 
 function toggleSort() {
-  sortField.value = sortField.value === 'amount' ? 'issueDate' : 'amount'
+  sortField.value = sortField.value === 'balance' ? 'issueDate' : 'balance'
 }
 
 function toggleInvoice(id) {
@@ -372,8 +380,10 @@ function toggleInvoice(id) {
 }
 
 function toggleSelectAll(event) {
+  const unpaidVisible = filteredInvoices.value.filter((invoice) => invoice.status === 'unpaid')
+
   if (event.target.checked) {
-    selectedInvoices.value = filteredInvoices.value.map((invoice) => invoice.id)
+    selectedInvoices.value = unpaidVisible.map((invoice) => invoice.id)
   } else {
     selectedInvoices.value = []
   }
