@@ -5,7 +5,7 @@
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p class="text-sm font-medium uppercase tracking-wide text-emerald-100">Bun venit, {{ welcomeName }}!</p>
-            <h2 class="mt-1 text-3xl font-semibold">Balanța disponibilă</h2>
+            <h2 class="mt-1 text-3xl font-semibold">Sold curent</h2>
             <p class="mt-2 text-4xl font-bold">{{ formatCurrency(availableBalance) }}</p>
           </div>
           <div class="rounded-2xl bg-white/10 px-4 py-3 text-sm text-emerald-50">
