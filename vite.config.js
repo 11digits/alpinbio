@@ -13,6 +13,12 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: 'prompt',
+      includeAssets: [
+        'favicon.ico',
+        'favicon-16x16.png',
+        'favicon-32x32.png',
+        'apple-touch-icon.png'
+      ],
       workbox: {
         cleanupOutdatedCaches: true,
       },
@@ -25,12 +31,12 @@ export default defineConfig({
         theme_color: '#059669',
         icons: [
           {
-            src: '/alpin-chrome-192x192.png',
+            src: '/android-chrome-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/alpin-chrome-512x512.png',
+            src: '/android-chrome-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           },
