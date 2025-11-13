@@ -178,6 +178,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getErrorMessage } from '@/utils/api'
 import { formatCurrency, formatDate, statusMeta } from '@/utils/formatters'
+import Swal from 'sweetalert2'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -355,19 +356,31 @@ function startExternalPayment() {
 
   if (selectedInvoices.value.length === 1) {
     const invoice = selectedInvoices.value[0]
-    window.alert(
-      `Vei fi redirecționat către pagina securizată pentru plata facturii ${invoice.number} în valoare de ${formatCurrency(
+    Swal.fire({
+      title: 'Continuă plata în siguranță',
+      text: `Vei fi redirecționat către pagina securizată pentru plata facturii ${invoice.number} în valoare de ${formatCurrency(
         invoice.balance
-      )}.`
-    )
+      )}.`,
+      icon: 'info',
+      confirmButtonText: 'Înțeleg',
+      confirmButtonColor: '#059669',
+      background: '#f8fafc',
+      color: '#0f172a'
+    })
     return
   }
 
-  window.alert(
-    `Vei fi redirecționat către pagina securizată pentru plata a ${
+  Swal.fire({
+    title: 'Continuă plata în siguranță',
+    text: `Vei fi redirecționat către pagina securizată pentru plata a ${
       selectedInvoices.value.length
-    } facturi în valoare totală de ${formatCurrency(selectedTotal.value)}.`
-  )
+    } facturi în valoare totală de ${formatCurrency(selectedTotal.value)}.`,
+    icon: 'info',
+    confirmButtonText: 'Înțeleg',
+    confirmButtonColor: '#059669',
+    background: '#f8fafc',
+    color: '#0f172a'
+  })
 }
 
 function statusClasses(tone) {

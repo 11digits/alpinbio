@@ -22,21 +22,23 @@
             v-for="action in quickActions"
             :key="action.label"
             :to="action.to"
-            class="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/20"
+            class="flex items-center justify-between rounded-2xl px-5 py-4 text-sm font-medium shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+            :class="action.cardClass"
           >
             <div>
-              <p class="text-emerald-100">
+              <p class="text-sm font-medium" :class="action.labelClass">
                 {{ action.label }}
                 <span
                   v-if="action.showCount && unpaidInvoicesCount"
-                  class="font-semibold text-white"
+                  class="font-semibold"
+                  :class="action.countClass"
                 >
                   ({{ unpaidInvoicesCount }})
                 </span>
               </p>
-              <p class="text-lg font-semibold text-white">{{ action.cta }}</p>
+              <p class="text-lg font-semibold" :class="action.ctaClass">{{ action.cta }}</p>
             </div>
-            <component :is="action.icon" class="h-6 w-6 text-emerald-100" />
+            <component :is="action.icon" class="h-8 w-8" :class="action.iconClass" />
           </RouterLink>
         </div>
       </div>
@@ -136,18 +138,39 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ro-RO', {
 })
 
 const quickActions = computed(() => [
-  { label: 'Facturile mele', cta: 'Vezi toate', to: '/invoices', icon: DocumentTextIcon, showCount: true },
-  { 
-    label: 'Efectuează o plată', 
-    cta: 'Plătește acum', 
+  {
+    label: 'Facturile mele',
+    cta: 'Vezi toate',
+    to: '/invoices',
+    icon: DocumentTextIcon,
+    showCount: true,
+    cardClass: 'bg-gradient-to-br from-sky-100 via-sky-50 to-indigo-50 text-slate-800',
+    labelClass: 'text-indigo-700',
+    ctaClass: 'text-indigo-900',
+    iconClass: 'text-indigo-500',
+    countClass: 'text-indigo-700'
+  },
+  {
+    label: 'Efectuează o plată',
+    cta: 'Plătește acum',
     to: { path: '/invoices', query: { status: 'unpaid' } },
-    icon: CreditCardIcon 
+    icon: CreditCardIcon,
+    cardClass: 'bg-gradient-to-br from-emerald-100 via-emerald-50 to-teal-50 text-slate-800',
+    labelClass: 'text-emerald-700',
+    ctaClass: 'text-emerald-900',
+    iconClass: 'text-emerald-500',
+    countClass: 'text-emerald-700'
   },
   {
     label: 'Istoric tranzacții',
     cta: 'Vezi detalii',
     to: { path: '/invoices', query: { status: 'paid' } },
-    icon: ChartBarIcon
+    icon: ChartBarIcon,
+    cardClass: 'bg-gradient-to-br from-amber-100 via-rose-50 to-orange-50 text-slate-800',
+    labelClass: 'text-amber-700',
+    ctaClass: 'text-amber-900',
+    iconClass: 'text-amber-500',
+    countClass: 'text-amber-700'
   }
 ])
 
