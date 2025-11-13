@@ -30,11 +30,22 @@ app.use(router)
 
 app.mount('#app')
 
+import Swal from 'sweetalert2'
+
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   const updateSW = registerSW({
     immediate: true,
-    onNeedRefresh() {
-      if (confirm('New version available. Reload to update?')) {
+    async onNeedRefresh() {
+      const result = await Swal.fire({
+        title: 'Actualizare disponibilă',
+        text: 'Există o versiune nouă. Reîncarci pentru a actualiza?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Da, reîncarcă',
+        cancelButtonText: 'Nu',
+      })
+
+      if (result.isConfirmed) {
         updateSW(true)
       }
     },

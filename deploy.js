@@ -8,7 +8,7 @@ const config = {
   host: "alpinbio.ro",
   port: 21,
   localRoot: "dist",
-  remoteRoot: "/",
+  remoteRoot: "/plati.alpinbio.ro",
   include: ["**/*"],
   deleteRemote: false,
   forcePasv: true
