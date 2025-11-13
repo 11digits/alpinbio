@@ -3,7 +3,11 @@
     <div class="w-full max-w-lg rounded-3xl bg-white p-8 shadow-lg ring-1 ring-emerald-100">
       <div class="mb-8 text-center">
         <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white text-xl font-semibold">
-          AB
+          <img
+            src="/alpin-logo.png"
+            alt="Alpin Bio Solution"
+            class="h-12 w-12 rounded-xl object-contain"
+          />
         </div>
         <h1 class="mt-4 text-2xl font-semibold text-slate-900">Autentificare</h1>
         <p class="mt-2 text-sm text-slate-500">Introduceți detaliile pentru a accesa facturile și plățile.</p>
