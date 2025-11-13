@@ -1,38 +1,55 @@
-CREATE TABLE sessions (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    customer_id VARCHAR(36) NOT NULL,
-    phone VARCHAR(30) NOT NULL,
-    verification_code VARCHAR(10) NOT NULL,
-    expires_at TIMESTAMP NOT NULL,
-    verified_at TIMESTAMP NULL,
-    FOREIGN KEY (customer_id) REFERENCES customers(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-CREATE TABLE customers (
-    id VARCHAR(36) PRIMARY KEY,
-    name VARCHAR(150) NOT NULL,
-    email VARCHAR(150) UNIQUE NOT NULL,
-    phone VARCHAR(30) NOT NULL,
-    billing_address TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-CREATE TABLE invoices (
-    id VARCHAR(36) PRIMARY KEY,
-    customer_id VARCHAR(36) NOT NULL,
-    number VARCHAR(50) UNIQUE NOT NULL,
-    issued_at DATE NOT NULL,
-    due_at DATE NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    status ENUM('paid','unpaid','due') DEFAULT 'unpaid',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (customer_id) REFERENCES customers(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-CREATE TABLE payments (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    invoice_id VARCHAR(36) NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    paid_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status ENUM('pending','confirmed','failed') DEFAULT 'pending',
-    payment_method VARCHAR(30),
-    reference VARCHAR(100),
-    FOREIGN KEY (invoice_id) REFERENCES invoices(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- Create syntax for TABLE 'customers'
+CREATE TABLE `customers` (
+  `id` varchar(36) NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `email` varchar(150) DEFAULT NULL,
+  `phone` varchar(30) DEFAULT NULL,
+  `billing_address` text,
+  `import_source` varchar(20) DEFAULT 'mssql',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Create syntax for TABLE 'invoices'
+CREATE TABLE `invoices` (
+  `id` varchar(36) NOT NULL,
+  `customer_id` varchar(36) NOT NULL,
+  `number` varchar(50) NOT NULL,
+  `issued_at` date NOT NULL,
+  `due_at` date NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `balance` decimal(10,2) NOT NULL,
+  `status` enum('paid','unpaid') DEFAULT 'unpaid',
+  `source` varchar(20) DEFAULT 'mssql',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `inv_num` (`number`),
+  KEY `customer_id` (`customer_id`),
+  KEY `status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Create syntax for TABLE 'payments'
+CREATE TABLE `payments` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `invoice_id` varchar(36) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `paid_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('pending','confirmed','failed') DEFAULT 'pending',
+  `payment_method` varchar(30) DEFAULT NULL,
+  `reference` varchar(100) DEFAULT NULL,
+  `import_source` varchar(20) DEFAULT 'manual',
+  PRIMARY KEY (`id`),
+  KEY `invoice_id` (`invoice_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Create syntax for TABLE 'sessions'
+CREATE TABLE `sessions` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `customer_id` varchar(36) NOT NULL,
+  `phone` varchar(30) NOT NULL,
+  `verification_code` varchar(10) NOT NULL,
+  `expires_at` timestamp NOT NULL,
+  `verified_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `customer_id` (`customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
