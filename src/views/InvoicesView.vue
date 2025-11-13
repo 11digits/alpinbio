@@ -6,13 +6,6 @@
           <h1 class="text-2xl font-semibold text-slate-900">Listă Facturi</h1>
           <p class="text-sm text-slate-500">Gestionează-ți facturile și filtrează-le rapid.</p>
         </div>
-        <RouterLink
-          to="/pay"
-          class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
-        >
-          Plătește facturi
-          <CreditCardIcon class="h-5 w-5" />
-        </RouterLink>
       </div>
 
       <div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -208,19 +201,17 @@ const router = useRouter()
 
 const searchTerm = ref('')
 const statusFilter = ref('all')
-const dateRange = ref('30')
+const dateRange = ref('all')
 const sortField = ref('issueDate')
 const selectedInvoices = ref([])
 
 const dateRangeOptions = [
-  { label: '7 zile', value: '7' },
-  { label: '30 zile', value: '30' },
   { label: '60 zile', value: '60' },
   { label: 'Toate', value: 'all' }
 ]
 
 const allowedStatuses = ['all', 'paid', 'unpaid']
-const allowedRanges = ['7', '30', '60', 'all']
+const allowedRanges = ['60', 'all']
 const allowedSorts = ['issueDate', 'amount']
 
 const allInvoices = computed(() => authStore.invoices)
@@ -304,7 +295,7 @@ watch(
       : 'all'
     const normalizedRange = allowedRanges.includes(query.range)
       ? query.range
-      : '30'
+      : 'all'
     const normalizedSort = allowedSorts.includes(query.sort)
       ? query.sort
       : 'issueDate'

@@ -20,8 +20,7 @@ export function formatDate(value) {
 export function statusMeta(status) {
   const map = {
     paid: { label: 'Plătită', tone: 'success' },
-    unpaid: { label: 'Neplătită', tone: 'danger' },
-    due: { label: 'Scadentă curând', tone: 'warning' }
+    unpaid: { label: 'Neplătită', tone: 'danger' }
   }
 
   return map[status] ?? { label: status, tone: 'neutral' }

@@ -137,7 +137,12 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ro-RO', {
 
 const quickActions = computed(() => [
   { label: 'Facturile mele', cta: 'Vezi toate', to: '/invoices', icon: DocumentTextIcon, showCount: true },
-  { label: 'Efectuează o plată', cta: 'Plătește acum', to: '/pay', icon: CreditCardIcon },
+  { 
+    label: 'Efectuează o plată', 
+    cta: 'Plătește acum', 
+    to: { path: '/invoices', query: { status: 'unpaid' } },
+    icon: CreditCardIcon 
+  },
   {
     label: 'Istoric tranzacții',
     cta: 'Vezi detalii',
@@ -152,7 +157,7 @@ const quickServices = computed(() => [
     description: 'Vizualizează toate facturile și istoricul plăților',
     cta: 'Vezi facturile',
     icon: DocumentTextIcon,
-    to: '/invoices',
+    to: { path: '/invoices', query: { status: 'all' } },
     showCount: true
   },
   {
@@ -160,7 +165,7 @@ const quickServices = computed(() => [
     description: 'Plătește facturile rapid și sigur în câteva secunde',
     cta: 'Plătește acum',
     icon: CreditCardIcon,
-    to: '/pay'
+    to: { path: '/invoices', query: { status: 'unpaid' } },
   }
 ])
 

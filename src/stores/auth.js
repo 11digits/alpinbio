@@ -65,43 +65,24 @@ function normalizeInvoice(invoice) {
 
   const amount = Number.parseFloat(invoice.amount ?? invoice.balance ?? 0) || 0
   const balance = Number.parseFloat(invoice.balance ?? amount) || 0
-  const status = deriveStatus(invoice.status, invoice.due_at, balance)
+  const status = deriveStatus(invoice.status, balance)
 
   return {
-    id: invoice.id,
-    number: invoice.number ?? invoice.id,
-    customerId: invoice.customer_id,
-    issueDate: invoice.issued_at,
-    dueDate: invoice.due_at,
+    ...invoice,
     amount,
     balance,
     status
   }
 }
 
-function deriveStatus(apiStatus, dueDate, balance) {
+function deriveStatus(apiStatus, balance) {
   if (apiStatus === 'paid' || balance <= 0) {
     return 'paid'
   }
 
-  if (!dueDate) {
-    return 'unpaid'
-  }
-
-  const due = new Date(dueDate)
-  const now = new Date()
-
-  if (Number.isNaN(due.getTime())) {
-    return 'unpaid'
-  }
-
-  if (due.getTime() < now.setHours(0, 0, 0, 0)) {
-    return 'unpaid'
-  }
-
-  const diffDays = Math.round((due - now) / (1000 * 60 * 60 * 24))
-  return diffDays <= 5 ? 'due' : 'unpaid'
+  return 'unpaid'
 }
+
 
 function normalizeCustomer(customer) {
   if (!customer) return null
