@@ -3,9 +3,11 @@
     <aside class="hidden lg:flex lg:w-72 xl:w-80 lg:flex-col lg:justify-between lg:bg-white lg:border-r lg:border-slate-200">
       <div class="px-6 py-8">
         <div class="flex items-center gap-3">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white text-xl font-semibold">
-            AB
-          </div>
+          <img
+            src="/alpin-logo.png"
+            alt="Alpin Bio Solution"
+            class="h-12 w-12 rounded-xl object-contain"
+          />
           <div>
             <p class="text-sm font-medium text-emerald-700">Alpin Bio Solution</p>
             <p class="text-xs text-slate-500">plati.alpinbio.ro</p>
@@ -38,9 +40,11 @@
 
             <!-- Left side (mobile only) -->
             <div class="flex items-center gap-3 lg:hidden">
-              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-white text-lg font-semibold">
-                AB
-              </div>
+            <img
+              src="/alpin-logo.png"
+              alt="Alpin Bio Solution"
+              class="h-10 w-10 rounded-lg object-contain"
+            />
               <div>
                 <p class="text-sm font-semibold text-slate-900">Alpin Bio Solution</p>
                 <p class="text-xs text-slate-500">plati.alpinbio.ro</p>
