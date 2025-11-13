@@ -10,28 +10,33 @@ import { version } from './package.json'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    vue(),    
+    vue(),
     VitePWA({
       registerType: 'prompt',
       workbox: {
         cleanupOutdatedCaches: true,
       },
       manifest: {
-        name: 'TotalClean Track app',
-        short_name: 'TTC Track',
-        start_url: '/ttctrack',
+        name: 'Alpin Bio Solution Payments',
+        short_name: 'Alpin Bio',
+        start_url: '/',
         display: 'standalone',
-        background_color: '#ffffff',
-        theme_color: '#ffffff',
+        background_color: '#f8fafc',
+        theme_color: '#059669',
         icons: [
           {
-            src: '/ttctrack/ttclogo500.png',
+            src: '/alpinbio-icon.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/ttctrack/ttclogo500.png',
+            src: '/alpinbio-icon.png',
             sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: '/favicon.png',
+            sizes: '64x64',
             type: 'image/png'
           }
         ]
@@ -50,5 +55,5 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 2500, // in kB
   },
-  base: '/ttctrack/'
+  base: '/'
 })
