@@ -4,8 +4,17 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+
   body {
-    font-family: "Trebuchet MS", sans-serif;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  a {
+    @apply text-inherit no-underline;
   }
 }
 
@@ -15,31 +24,11 @@
   touch-action: manipulation;
 }
 
-/* Fix for mobile viewport height issues */
-.h-dvh {
-  height: 100dvh; /* dynamic viewport height */
-}
-.min-h-dvh {
-  min-height: 100dvh;
-}
-
-html, body {
-  overscroll-behavior: none;
-}
-
+html,
 body {
-  left: 0;
-  top: 0;
-  position: fixed;
-  padding: 0;
-  margin: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100%;
 }
 
 #app {
-  height:100%;
-  width:100%;
-  overflow: auto;
+  min-height: 100vh;
 }

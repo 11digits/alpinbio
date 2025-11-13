@@ -1,19 +1,19 @@
 <template>
-  <TopBar v-if="!isLogin" />
-  <div :class="!isLogin ? 'pt-10 pb-16' : ''">
-    <router-view />
-  </div>
-  <BottomNav v-if="!isLogin" />
+  <RouterView v-slot="{ Component }">
+    <div class="min-h-screen bg-slate-50 text-slate-900">
+      <component v-if="isLogin" :is="Component" />
+      <AppLayout v-else>
+        <component :is="Component" />
+      </AppLayout>
+    </div>
+  </RouterView>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import TopBar from './components/TopBar.vue'
-import BottomNav from './components/BottomNav.vue'
+import { useRoute, RouterView } from 'vue-router'
+import AppLayout from '@/components/layout/AppLayout.vue'
 
 const route = useRoute()
-
-// computed → will update reactively whenever route changes
-const isLogin = computed(() => route.path === '/' || route.path === '/login')
+const isLogin = computed(() => route.name === 'login')
 </script>
