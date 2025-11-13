@@ -38,99 +38,57 @@
           </div>
         </div>
 
-        <form class="flex-1 space-y-4" @submit.prevent="submitPayment">
-          <h2 class="text-lg font-semibold text-slate-900">Introdu detalii card</h2>
-          <p class="text-sm text-slate-500">Completează datele cardului pentru a confirma plata facturii.</p>
-
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div class="sm:col-span-2">
-              <label class="text-sm font-medium text-slate-600" for="card-name">Numele titularului cardului</label>
-              <input
-                id="card-name"
-                v-model="form.cardName"
-                type="text"
-                required
-                placeholder="Numele titularului cardului"
-                class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-              />
-            </div>
-            <div class="sm:col-span-2">
-              <label class="text-sm font-medium text-slate-600" for="card-number">Număr card</label>
-              <input
-                id="card-number"
-                v-model="form.cardNumber"
-                type="text"
-                inputmode="numeric"
-                required
-                placeholder="XXXX XXXX XXXX XXXX"
-                class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-              />
-            </div>
-            <div>
-              <label class="text-sm font-medium text-slate-600" for="expiry">Data expirării</label>
-              <input
-                id="expiry"
-                v-model="form.expiry"
-                type="text"
-                inputmode="numeric"
-                required
-                placeholder="MM/AA"
-                class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-              />
-            </div>
-            <div>
-              <label class="text-sm font-medium text-slate-600" for="cvv">CVV</label>
-              <input
-                id="cvv"
-                v-model="form.cvv"
-                type="password"
-                inputmode="numeric"
-                maxlength="4"
-                required
-                placeholder="XXX"
-                class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-              />
-            </div>
-          </div>
-
-          <p class="text-xs text-slate-500">
-            Datele cardului sunt stocate în siguranță de către partenerii noștri, conform politicii de confidențialitate.
+        <div class="flex-1 space-y-5 rounded-2xl border border-slate-100 p-6">
+          <h2 class="text-lg font-semibold text-slate-900">Plată externă securizată</h2>
+          <p class="text-sm text-slate-500">
+            Pentru a finaliza plata, vei fi redirecționat către pagina securizată a procesatorului nostru. După confirmare,
+            statusul facturii se va actualiza automat.
           </p>
 
+          <ul class="space-y-3 text-sm text-slate-600">
+            <li class="flex items-start gap-3">
+              <span class="mt-1 inline-flex h-2 w-2 flex-none rounded-full bg-emerald-400"></span>
+              <span>Verifică detaliile facturii înainte de a continua către plata online.</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="mt-1 inline-flex h-2 w-2 flex-none rounded-full bg-emerald-400"></span>
+              <span>Vei primi confirmarea plății pe e-mail imediat după finalizarea tranzacției.</span>
+            </li>
+          </ul>
+
           <button
-            type="submit"
+            type="button"
             class="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
+            @click="startExternalPayment"
           >
-            Confirmă plata
+            Continuă către plata securizată
           </button>
-        </form>
+
+          <p class="text-xs text-slate-400">
+            După finalizarea plății, vei fi redirecționat înapoi pentru a vedea confirmarea tranzacției.
+          </p>
+        </div>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { invoices } from '@/data/invoices'
 import { formatCurrency, formatDate, statusMeta } from '@/utils/formatters'
 
 const route = useRoute()
-const form = reactive({
-  cardName: 'Client Premium',
-  cardNumber: 'XXXX XXXX XXXX XXXX',
-  expiry: '',
-  cvv: ''
-})
 
 const currentInvoice = computed(() => {
   const invoiceId = route.params.id
   return invoices.find((invoice) => invoice.id === invoiceId) ?? invoices[0]
 })
 
-function submitPayment() {
+function startExternalPayment() {
   window.alert(
-    `Plata pentru factura ${currentInvoice.value.number} în valoare de ${formatCurrency(currentInvoice.value.amount)} a fost trimisă.`
+    `Vei fi redirecționat către pagina securizată pentru plata facturii ${currentInvoice.value.number} în valoare de ${formatCurrency(currentInvoice.value.amount)}.`
   )
 }
 

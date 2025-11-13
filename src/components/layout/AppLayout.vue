@@ -29,14 +29,6 @@
           </RouterLink>
         </nav>
       </div>
-
-      <div class="px-6 py-6 border-t border-slate-200">
-        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Resurse</p>
-        <ul class="mt-4 space-y-2 text-sm text-slate-600">
-          <li><a href="#" class="hover:text-emerald-600">Legal</a></li>
-          <li><a href="#" class="hover:text-emerald-600">Contactați-ne</a></li>
-        </ul>
-      </div>
     </aside>
 
     <div class="flex min-h-screen flex-1 flex-col">
@@ -53,17 +45,6 @@
               </div>
             </div>
 
-            <div class="hidden lg:block w-full max-w-md">
-              <label class="relative flex items-center">
-                <input
-                  type="search"
-                  placeholder="Caută facturi, plăți sau servicii"
-                  class="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                />
-                <MagnifyingGlassIcon class="pointer-events-none absolute right-3 h-5 w-5 text-slate-400" />
-              </label>
-            </div>
-
             <div class="flex items-center gap-3">
               <div class="hidden sm:flex flex-col text-right">
                 <span class="text-sm font-semibold text-slate-900">Client Premium</span>
@@ -75,16 +56,6 @@
             </div>
           </div>
 
-          <div class="pb-4 lg:hidden">
-            <label class="relative mt-3 flex items-center">
-              <input
-                type="search"
-                placeholder="Caută facturi, plăți sau servicii"
-                class="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-              />
-              <MagnifyingGlassIcon class="pointer-events-none absolute right-3 h-5 w-5 text-slate-400" />
-            </label>
-          </div>
         </div>
       </header>
 
@@ -95,8 +66,8 @@
   </div>
 
   <nav class="fixed bottom-0 left-0 right-0 border-t border-slate-200 bg-white shadow-lg/5 lg:hidden">
-    <div class="mx-auto w-full max-w-6xl px-4">
-      <ul class="flex list-none items-center justify-between gap-2 py-2">
+    <div class="mx-auto w-full px-4 pb-[env(safe-area-inset-bottom)]">
+      <ul class="grid grid-cols-3 list-none items-center gap-1 py-2">
         <li v-for="item in navigation" :key="item.to" class="flex-1">
           <RouterLink
             :to="item.to"
@@ -117,8 +88,7 @@ import { useRoute, RouterLink } from 'vue-router'
 import {
   HomeIcon,
   DocumentTextIcon,
-  CreditCardIcon,
-  MagnifyingGlassIcon
+  CreditCardIcon
 } from '@heroicons/vue/24/outline'
 
 const navigation = [
