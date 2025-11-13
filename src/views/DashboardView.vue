@@ -1,7 +1,9 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 animate-fade-slide">
     <section class="grid gap-6 lg:grid-cols-[2fr,1fr]">
-      <div class="rounded-3xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-6 text-white shadow-xl">
+      <div
+        class="rounded-3xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-6 text-white shadow-xl animate-fade-slide"
+      >
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p class="text-sm font-medium uppercase tracking-wide text-emerald-100">Bun venit, {{ welcomeName }}!</p>
@@ -43,7 +45,10 @@
         </div>
       </div>
 
-      <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+      <div
+        class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 animate-fade-slide"
+        style="animation-delay: .15s"
+      >
         <h3 class="text-lg font-semibold text-slate-900">Servicii rapide</h3>
         <p class="mt-1 text-sm text-slate-500">Ultimele actualizări {{ lastUpdateLabel }}</p>
 
@@ -74,7 +79,10 @@
       </div>
     </section>
 
-    <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+    <section
+      class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 animate-fade-slide"
+      style="animation-delay: .3s"
+    >
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 class="text-lg font-semibold text-slate-900">Ultimele Facturi</h3>
@@ -101,7 +109,12 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 text-slate-600">
-            <tr v-for="invoice in latestInvoices" :key="invoice.id" class="transition hover:bg-emerald-50/40">
+            <tr
+              v-for="(invoice, index) in latestInvoices"
+              :key="invoice.id"
+              class="transition hover:bg-emerald-50/40 animate-fade-slide"
+              :style="{ animationDelay: `${index * 80}ms` }"
+            >
               <td class="px-4 py-3 font-semibold text-slate-900">{{ invoice.number }}</td>
               <td class="px-4 py-3">{{ formatDate(invoice.issueDate) }}</td>
               <td class="px-4 py-3 font-semibold text-slate-900">{{ formatCurrency(invoice.amount) }}</td>

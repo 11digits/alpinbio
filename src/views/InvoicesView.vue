@@ -1,6 +1,6 @@
 <template>
-  <div class="space-y-6">
-    <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+  <div class="space-y-6 animate-fade-slide">
+    <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 animate-fade-slide">
       <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 class="text-2xl font-semibold text-slate-900">Listă Facturi</h1>
@@ -64,7 +64,10 @@
       </div>
     </section>
 
-    <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
+    <section
+      class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 animate-fade-slide"
+      style="animation-delay: .15s"
+    >
       <div class="flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-3">
           <label class="flex items-center gap-2 text-sm font-medium text-slate-600">
@@ -97,7 +100,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 text-slate-600">
-            <tr v-if="isLoading" class="transition">
+            <tr v-if="isLoading" class="transition animate-fade-slide">
               <td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500">
                 <div class="flex items-center justify-center gap-3">
                   <svg
@@ -115,16 +118,17 @@
             </tr>
             <template v-else>
               <template v-if="filteredInvoices.length === 0">
-                <tr class="transition">
+                <tr class="transition animate-fade-slide">
                   <td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500">
                     Nu există facturi care să corespundă filtrării curente.
                   </td>
                 </tr>
               </template>
               <tr
-                v-for="invoice in filteredInvoices"
+                v-for="(invoice, index) in filteredInvoices"
                 :key="invoice.id"
-                class="transition hover:bg-emerald-50/50 cursor-pointer"
+                class="transition hover:bg-emerald-50/50 cursor-pointer animate-fade-slide"
+                :style="{ animationDelay: `${index * 60}ms` }"
                 @click="invoice.status === 'unpaid' && toggleInvoice(invoice.id)"
               >
                 <td class="px-4 py-3" @click.stop>
@@ -166,7 +170,10 @@
         </table>
       </div>
 
-      <div class="mt-6 flex flex-col gap-4 rounded-2xl bg-emerald-50 px-4 py-4 text-sm text-emerald-700 sm:flex-row sm:items-center sm:justify-between">
+      <div
+        class="mt-6 flex flex-col gap-4 rounded-2xl bg-emerald-50 px-4 py-4 text-sm text-emerald-700 sm:flex-row sm:items-center sm:justify-between animate-fade-slide"
+        style="animation-delay: .3s"
+      >
         <div>
           Facturi selectate: <span class="font-semibold">{{ selectedInvoices.length }}</span>
           — Total de plată: <span class="font-semibold">{{ formatCurrency(selectedTotal) }}</span>
