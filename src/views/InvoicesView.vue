@@ -168,7 +168,7 @@
           — Total de plată: <span class="font-semibold">{{ formatCurrency(selectedTotal) }}</span>
         </div>
         <RouterLink
-          to="/pay"
+          :to="payLink"
           class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-200"
           :class="{ 'opacity-50': selectedInvoices.length === 0 }"
         >
@@ -267,6 +267,17 @@ const selectedTotal = computed(() =>
     return invoice ? total + invoice.amount : total
   }, 0)
 )
+
+const payLink = computed(() => {
+  if (selectedInvoices.value.length === 0) {
+    return { path: '/pay' }
+  }
+
+  return {
+    path: '/pay',
+    query: { invoices: selectedInvoices.value.join(',') }
+  }
+})
 
 const sortLabel = computed(() => (sortField.value === 'amount' ? 'Valoare' : 'Dată factură'))
 const areAllVisibleSelected = computed(
