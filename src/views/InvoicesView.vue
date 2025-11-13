@@ -26,13 +26,27 @@
           />
         </label>
 
-        <button
-          type="button"
-          class="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-emerald-300 hover:text-emerald-600"
+        <div
+          class="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-600"
         >
-          <span>Perioadă: ultimele 30 zile</span>
-          <CalendarDaysIcon class="h-5 w-5" />
-        </button>
+          <CalendarDaysIcon class="h-5 w-5 text-slate-400" />
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              v-for="option in dateRangeOptions"
+              :key="option.value"
+              type="button"
+              class="rounded-lg px-3 py-1 text-xs font-semibold transition"
+              :class="
+                option.value === dateRange
+                  ? 'bg-emerald-600 text-white shadow'
+                  : 'bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-600'
+              "
+              @click="dateRange = option.value"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
 
         <div class="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-600">
           <FunnelIcon class="h-5 w-5 text-slate-400" />
@@ -42,7 +56,6 @@
           >
             <option value="all">Toate statusurile</option>
             <option value="paid">Plătite</option>
-            <option value="due">Scadente curând</option>
             <option value="unpaid">Neplătite</option>
           </select>
         </div>
@@ -93,7 +106,18 @@
           <tbody class="divide-y divide-slate-100 text-slate-600">
             <tr v-if="isLoading" class="transition">
               <td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500">
-                Se încarcă facturile...
+                <div class="flex items-center justify-center gap-3">
+                  <svg
+                    class="h-5 w-5 animate-spin text-emerald-600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                  <span>Se încarcă facturile...</span>
+                </div>
               </td>
             </tr>
             <template v-else>
@@ -165,7 +189,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
   ArrowRightIcon,
   ArrowsUpDownIcon,
@@ -179,16 +203,41 @@ import { useAuthStore } from '@/stores/auth'
 import { formatCurrency, formatDate, statusMeta } from '@/utils/formatters'
 
 const authStore = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 
 const searchTerm = ref('')
 const statusFilter = ref('all')
-const sortField = ref('dueDate')
+const dateRange = ref('30')
+const sortField = ref('issueDate')
 const selectedInvoices = ref([])
+
+const dateRangeOptions = [
+  { label: '7 zile', value: '7' },
+  { label: '30 zile', value: '30' },
+  { label: '60 zile', value: '60' },
+  { label: 'Toate', value: 'all' }
+]
+
+const allowedStatuses = ['all', 'paid', 'unpaid']
+const allowedRanges = ['7', '30', '60', 'all']
+const allowedSorts = ['issueDate', 'amount']
 
 const allInvoices = computed(() => authStore.invoices)
 
 const filteredInvoices = computed(() => {
   const search = searchTerm.value.trim().toLowerCase()
+  const range = dateRange.value
+  let rangeStart = null
+
+  if (range !== 'all') {
+    const days = Number.parseInt(range, 10)
+    if (Number.isFinite(days)) {
+      rangeStart = new Date()
+      rangeStart.setHours(0, 0, 0, 0)
+      rangeStart.setDate(rangeStart.getDate() - (days - 1))
+    }
+  }
 
   return allInvoices.value
     .filter((invoice) => {
@@ -198,14 +247,26 @@ const filteredInvoices = computed(() => {
         formatDate(invoice.issueDate).toLowerCase().includes(search)
 
       const matchesStatus = statusFilter.value === 'all' || invoice.status === statusFilter.value
-      return matchesSearch && matchesStatus
+
+      let matchesRange = true
+      if (rangeStart) {
+        const issueDate = new Date(invoice.issueDate)
+        matchesRange = !Number.isNaN(issueDate.getTime()) && issueDate >= rangeStart
+      }
+
+      return matchesSearch && matchesStatus && matchesRange
     })
     .sort((a, b) => {
       if (sortField.value === 'amount') {
         return b.amount - a.amount
       }
 
-      return new Date(a.dueDate) - new Date(b.dueDate)
+      const dateA = new Date(a.issueDate)
+      const dateB = new Date(b.issueDate)
+
+      return Number.isNaN(dateB.getTime()) || Number.isNaN(dateA.getTime())
+        ? 0
+        : dateB.getTime() - dateA.getTime()
     })
 })
 
@@ -216,7 +277,7 @@ const selectedTotal = computed(() =>
   }, 0)
 )
 
-const sortLabel = computed(() => (sortField.value === 'amount' ? 'Valoare' : 'Dată scadență'))
+const sortLabel = computed(() => (sortField.value === 'amount' ? 'Valoare' : 'Dată factură'))
 const areAllVisibleSelected = computed(
   () => filteredInvoices.value.length > 0 && filteredInvoices.value.every((invoice) => selectedInvoices.value.includes(invoice.id))
 )
@@ -231,12 +292,73 @@ onMounted(() => {
   }
 })
 
+let isSyncingFromRoute = false
+
+watch(
+  () => route.query,
+  (query) => {
+    isSyncingFromRoute = true
+
+    const normalizedStatus = allowedStatuses.includes(query.status)
+      ? query.status
+      : 'all'
+    const normalizedRange = allowedRanges.includes(query.range)
+      ? query.range
+      : '30'
+    const normalizedSort = allowedSorts.includes(query.sort)
+      ? query.sort
+      : 'issueDate'
+
+    searchTerm.value = query.search?.toString() ?? ''
+    statusFilter.value = normalizedStatus
+    dateRange.value = normalizedRange
+    sortField.value = normalizedSort
+
+    isSyncingFromRoute = false
+  },
+  { immediate: true }
+)
+
+watch(
+  [searchTerm, statusFilter, dateRange, sortField],
+  () => {
+    if (isSyncingFromRoute) {
+      return
+    }
+
+    const nextQuery = {}
+
+    if (searchTerm.value.trim()) {
+      nextQuery.search = searchTerm.value.trim()
+    }
+
+    if (statusFilter.value !== 'all') {
+      nextQuery.status = statusFilter.value
+    }
+
+    if (dateRange.value !== '30') {
+      nextQuery.range = dateRange.value
+    }
+
+    if (sortField.value !== 'issueDate') {
+      nextQuery.sort = sortField.value
+    }
+
+    const currentQuery = querySnapshot()
+    if (isEqualQueries(currentQuery, nextQuery)) {
+      return
+    }
+
+    router.replace({ query: nextQuery }).catch(() => {})
+  }
+)
+
 watch(allInvoices, () => {
   selectedInvoices.value = selectedInvoices.value.filter((id) => allInvoices.value.some((invoice) => invoice.id === id))
 })
 
 function toggleSort() {
-  sortField.value = sortField.value === 'amount' ? 'dueDate' : 'amount'
+  sortField.value = sortField.value === 'amount' ? 'issueDate' : 'amount'
 }
 
 function toggleInvoice(id) {
@@ -253,6 +375,39 @@ function toggleSelectAll(event) {
   } else {
     selectedInvoices.value = []
   }
+}
+
+function querySnapshot() {
+  const snapshot = {}
+
+  if (route.query.search) {
+    snapshot.search = route.query.search.toString()
+  }
+
+  if (route.query.status && route.query.status !== 'all') {
+    snapshot.status = route.query.status
+  }
+
+  if (route.query.range && route.query.range !== '30') {
+    snapshot.range = route.query.range
+  }
+
+  if (route.query.sort && route.query.sort !== 'issueDate') {
+    snapshot.sort = route.query.sort
+  }
+
+  return snapshot
+}
+
+function isEqualQueries(a, b) {
+  const keysA = Object.keys(a)
+  const keysB = Object.keys(b)
+
+  if (keysA.length !== keysB.length) {
+    return false
+  }
+
+  return keysA.every((key) => a[key] === b[key])
 }
 
 function statusClasses(tone) {

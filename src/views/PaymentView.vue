@@ -3,9 +3,18 @@
     <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100">
       <div
         v-if="isLoading"
-        class="rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-6 text-center text-sm text-emerald-700"
+        class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-emerald-200 bg-emerald-50/40 p-6 text-sm text-emerald-700"
       >
-        Se încarcă detaliile facturii selectate...
+        <svg
+          class="h-6 w-6 animate-spin text-emerald-600"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <span>Se încarcă detaliile facturii selectate...</span>
       </div>
       <div v-else-if="errorMessage" class="space-y-4 rounded-2xl border border-rose-200 bg-rose-50/40 p-6 text-sm text-rose-700">
         <p>{{ errorMessage }}</p>
@@ -17,8 +26,22 @@
           Reîncearcă încărcarea facturii
         </button>
       </div>
-      <div v-else-if="!currentInvoice" class="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
-        Nu există facturi disponibile pentru plată în acest moment.
+      <div
+        v-else-if="!currentInvoice"
+        class="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500"
+      >
+        <p v-if="authStore.invoices.length === 0">
+          Nu există facturi disponibile pentru plată în acest moment.
+        </p>
+        <template v-else>
+          <p>Selectează facturile pentru plată din secțiunea „Listă Facturi”.</p>
+          <RouterLink
+            to="/invoices"
+            class="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 px-4 py-2 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50"
+          >
+            Mergi la facturi
+          </RouterLink>
+        </template>
       </div>
       <div v-else class="flex flex-col gap-6 lg:flex-row">
         <div class="flex-1 rounded-2xl bg-slate-50 p-6">
@@ -94,7 +117,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { getErrorMessage } from '@/utils/api'
 import { formatCurrency, formatDate, statusMeta } from '@/utils/formatters'

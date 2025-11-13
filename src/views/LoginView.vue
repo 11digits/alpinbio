@@ -16,7 +16,7 @@
       <form class="space-y-5" @submit.prevent="handleSubmit">
         <div>
           <label class="text-sm font-medium text-slate-600" for="invoice">Număr factură</label>
-          <div class="mt-1 flex flex-col gap-2 sm:flex-row">
+          <div class="mt-1">
             <input
               id="invoice"
               v-model="form.invoiceNumber"
@@ -26,14 +26,6 @@
               placeholder="Introduceți numărul facturii"
               class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:bg-slate-100"
             />
-            <button
-              type="button"
-              class="inline-flex items-center justify-center rounded-xl border border-emerald-200 px-4 py-3 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
-              :disabled="!form.invoiceNumber || authStore.isLoading || hasVerifiedInvoice"
-              @click="lookupInvoice"
-            >
-              Verifică factura
-            </button>
           </div>
           <p v-if="authStore.invoiceError" class="mt-2 text-sm text-rose-600">{{ authStore.invoiceError }}</p>
         </div>
@@ -69,10 +61,20 @@
 
         <button
           type="submit"
-          class="w-full rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-200"
+          class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-200"
           :disabled="authStore.isLoading || !canSubmit"
         >
-          {{ hasVerifiedInvoice ? 'Autentificare' : 'Verifică factura' }}
+          <svg
+            v-if="authStore.isLoading"
+            class="h-4 w-4 animate-spin text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <span>{{ hasVerifiedInvoice ? 'Autentificare' : 'Verifică factura' }}</span>
         </button>
       </form>
 

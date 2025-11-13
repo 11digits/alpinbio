@@ -20,12 +20,20 @@
         <div class="mt-6 grid gap-4 sm:grid-cols-3">
           <RouterLink
             v-for="action in quickActions"
-            :key="action.to"
+            :key="action.label"
             :to="action.to"
             class="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 text-sm font-medium transition hover:bg-white/20"
           >
             <div>
-              <p class="text-emerald-100">{{ action.label }}</p>
+              <p class="text-emerald-100">
+                {{ action.label }}
+                <span
+                  v-if="action.showCount && unpaidInvoicesCount"
+                  class="font-semibold text-white"
+                >
+                  ({{ unpaidInvoicesCount }})
+                </span>
+              </p>
               <p class="text-lg font-semibold text-white">{{ action.cta }}</p>
             </div>
             <component :is="action.icon" class="h-6 w-6 text-emerald-100" />
@@ -45,7 +53,15 @@
           >
             <component :is="service.icon" class="mt-1 h-6 w-6 text-emerald-500" />
             <div class="flex-1">
-              <p class="text-sm font-semibold text-slate-900">{{ service.label }}</p>
+              <p class="text-sm font-semibold text-slate-900">
+                {{ service.label }}
+                <span
+                  v-if="service.showCount && unpaidInvoicesCount"
+                  class="font-semibold text-emerald-600"
+                >
+                  ({{ unpaidInvoicesCount }})
+                </span>
+              </p>
               <p class="text-sm text-slate-500">{{ service.description }}</p>
             </div>
             <RouterLink :to="service.to" class="text-sm font-semibold text-emerald-600 hover:text-emerald-700">
@@ -119,19 +135,25 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ro-RO', {
   timeStyle: 'short'
 })
 
-const quickActions = [
-  { label: 'Facturile mele', cta: 'Vezi toate', to: '/invoices', icon: DocumentTextIcon },
+const quickActions = computed(() => [
+  { label: 'Facturile mele', cta: 'Vezi toate', to: '/invoices', icon: DocumentTextIcon, showCount: true },
   { label: 'Efectuează o plată', cta: 'Plătește acum', to: '/pay', icon: CreditCardIcon },
-  { label: 'Istoric tranzacții', cta: 'Vezi detalii', to: '/invoices', icon: ChartBarIcon }
-]
+  {
+    label: 'Istoric tranzacții',
+    cta: 'Vezi detalii',
+    to: { path: '/invoices', query: { status: 'paid' } },
+    icon: ChartBarIcon
+  }
+])
 
-const quickServices = [
+const quickServices = computed(() => [
   {
     label: 'Facturile mele',
     description: 'Vizualizează toate facturile și istoricul plăților',
     cta: 'Vezi facturile',
     icon: DocumentTextIcon,
-    to: '/invoices'
+    to: '/invoices',
+    showCount: true
   },
   {
     label: 'Efectuează o plată',
@@ -140,7 +162,7 @@ const quickServices = [
     icon: CreditCardIcon,
     to: '/pay'
   }
-]
+])
 
 const welcomeName = computed(() => {
   const fullName = authStore.customer?.name?.trim()
@@ -157,6 +179,10 @@ const welcomeName = computed(() => {
 })
 
 const availableBalance = computed(() => authStore.outstandingBalance)
+
+const unpaidInvoicesCount = computed(() =>
+  authStore.invoices.filter((invoice) => invoice.status !== 'paid').length
+)
 
 const latestInvoices = computed(() =>
   [...authStore.invoices]

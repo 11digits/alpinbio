@@ -8,10 +8,7 @@
             alt="Alpin Bio Solution"
             class="h-12 w-12 rounded-xl object-contain"
           />
-          <div>
-            <p class="text-sm font-medium text-emerald-700">Alpin Bio Solution</p>
-            <p class="text-xs text-slate-500">plati.alpinbio.ro</p>
-          </div>
+          <p class="text-lg font-semibold text-emerald-700">Alpin Bio Solution</p>
         </div>
 
         <nav class="mt-10 space-y-2">
@@ -40,15 +37,12 @@
 
             <!-- Left side (mobile only) -->
             <div class="flex items-center gap-3 lg:hidden">
-            <img
-              src="/alpin-logo.png"
-              alt="Alpin Bio Solution"
-              class="h-10 w-10 rounded-lg object-contain"
-            />
-              <div>
-                <p class="text-sm font-semibold text-slate-900">Alpin Bio Solution</p>
-                <p class="text-xs text-slate-500">plati.alpinbio.ro</p>
-              </div>
+              <img
+                src="/alpin-logo.png"
+                alt="Alpin Bio Solution"
+                class="h-10 w-10 rounded-lg object-contain"
+              />
+              <p class="text-base font-semibold text-slate-900">Alpin Bio Solution</p>
             </div>
 
             <!-- Right user block -->
