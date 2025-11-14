@@ -106,6 +106,7 @@
                   {{ statusMeta(invoice.status).label }}
                 </span>
                 <RouterLink
+                  v-if="invoice.status === 'unpaid'"
                   :to="`/pay/${invoice.id}`"
                   class="inline-flex items-center gap-2 font-semibold text-emerald-600 transition hover:text-emerald-700"
                 >
@@ -129,6 +130,7 @@
           class="w-full max-w-sm space-y-5 rounded-2xl border border-slate-100 p-6 animate-fade-slide
                 sticky top-20 self-start bg-white z-10"
           style="animation-delay: .2s"
+          v-if="selectedTotal > 0"
         >
           <h2 class="text-lg font-semibold text-slate-900">Sumar plată</h2>
           <dl class="space-y-4 text-sm text-slate-600">
@@ -186,6 +188,34 @@
           <p class="text-xs text-slate-400">
             După finalizarea plății vei fi redirecționat înapoi pentru confirmarea tranzacției.
           </p>
+        </div>
+        <div
+          v-else
+          class="w-full max-w-sm rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 text-center text-sm text-emerald-700 shadow-sm animate-fade-slide"
+          style="animation-delay: .2s"
+        >
+          <h2 class="text-lg font-semibold text-emerald-800">Plata efectuata cu succes</h2>
+          <p class="mt-2 text-emerald-700">
+            Toate facturile selectate au fost achitate deja.
+          </p>
+
+          <div class="mt-4 flex justify-center">
+            <RouterLink
+              to="/invoices"
+              class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-500"
+            >
+              Vezi lista de facturi
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3.5 w-3.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+              </svg>
+            </RouterLink>
+          </div>
         </div>
       </div>
     </section>
@@ -382,7 +412,7 @@ onBeforeUnmount(() => {
 function generatePaymentToken() {
   const randomPart = `${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`
   const timestamp = Date.now().toString(36)
-  return `inv-${randomPart}-${timestamp}`
+  return `payment-${randomPart}-${timestamp}`
 }
 
 function cleanupPaymentWindow() {
@@ -398,78 +428,158 @@ function cleanupPaymentWindow() {
 
   shouldPollPaymentStatus = false
 
-  if (paymentWindowInstance && !paymentWindowInstance.closed) {
-    try {
-      paymentWindowInstance.close()
-    } catch (error) {
-      // fereastra poate fi deja închisă de utilizator
-    }
-  }
-
-  paymentWindowInstance = null
   paymentWindowOpen = false
+  paymentWindowInstance = null
 }
 
 function openPaymentLink(url) {
+  return openPaymentLinkInline(url);
+
   if (paymentWindowOpen) {
     Swal.fire({
-      title: 'Plată în desfășurare',
-      text: 'Există deja o fereastră de plată deschisă. Închide fereastra curentă înainte de a începe o nouă plată.',
-      icon: 'warning',
-      confirmButtonColor: '#059669'
+      title: "Plată deja în curs",
+      html: `
+        Există deja o plată în desfășurare.<br><br>
+        <button id="cancel-payment" class="swal2-confirm swal2-styled" style="background:#dc2626">
+          Anulează plata curentă
+        </button>
+      `,
+      icon: "warning",
+      showConfirmButton: false,
+      didRender: () => {
+        document.getElementById("cancel-payment").onclick = () => {
+          cleanupPaymentWindow()
+          Swal.close()
+        }
+      }
     })
     return false
   }
 
-  if (typeof window === 'undefined') {
-    return false
-  }
-
-  if (window.cordova?.InAppBrowser) {
-    const features =
-      window.device && window.device.platform?.toLowerCase() === 'android'
-        ? 'lefttoright=yes,location=yes,hideurlbar=yes,closebuttoncolor=#FFFFFF,navigationbuttoncolor=#FFFFFF,toolbarcolor=#282761,closebuttoncaption=Inchide,hidenavigationbuttons=yes,fullscreen=no,mediaPlaybackRequiresUserAction=no'
-        : 'fullscreen=no,allowInlineMediaPlayback=yes,enableViewportScale=yes,toolbarposition=top,hidenavigationbuttons=yes,location=no,closebuttoncaption=Inchide,clearcache=yes,clearsessioncache=yes,toolbarcolor=#282761,toolbartranslucent=no,closebuttoncolor=#FFFFFF,navigationbuttoncolor=#FFFFFF'
-
-    const inAppBrowser = window.cordova.InAppBrowser.open(url, '_blank', features)
-
-    paymentWindowOpen = true
-    paymentWindowInstance = inAppBrowser
-
-    inAppBrowser.addEventListener('exit', () => {
-      paymentWindowOpen = false
-      shouldPollPaymentStatus = false
-    })
-
-    return true
-  }
-
-  const openedWindow = window.open(
-    url,
-    '_blank',
-    'noopener=yes,noreferrer=yes,toolbarposition=top,location=no,closebuttoncaption=Inchide,clearcache=yes,clearsessioncache=yes'
-  )
-
-  if (!openedWindow) {
-    Swal.fire({
-      title: 'Fereastra a fost blocată',
-      text: 'Permite ferestrele pop-up pentru a putea continua plata.',
-      icon: 'warning',
-      confirmButtonColor: '#059669'
-    })
-    return false
-  }
-
-  paymentWindowInstance = openedWindow
+  // Mark flow as started
   paymentWindowOpen = true
 
-  const watcher = window.setInterval(() => {
-    if (openedWindow.closed) {
-      window.clearInterval(watcher)
-      paymentWindowOpen = false
-      shouldPollPaymentStatus = false
+  // 🔥 1. Open the real payment page immediately (user action → not blocked)
+  window.open(url, "_blank")
+
+  // 🔥 2. Then show the "ongoing payment" modal
+  Swal.fire({
+    title: "Plată în desfășurare",
+    html: `
+      Pagina de plată a fost deschisă într-o filă nouă.<br>
+      Finalizează plata și vom verifica automat statusul tranzacției.<br><br>
+
+      <button id="cancel-payment" class="swal2-cancel swal2-styled" style="background:#dc2626">
+        Anulează plata
+      </button>
+    `,
+    showConfirmButton: false,
+    allowOutsideClick: false,
+    didRender: () => {
+      document.getElementById("cancel-payment").onclick = () => {
+        cleanupPaymentWindow()
+        Swal.fire({
+          title: "Plata a fost anulată",
+          icon: "info",
+          confirmButtonColor: "#059669"
+        })
+      }
     }
-  }, 250)
+  })
+
+  return true
+}
+
+function openPaymentLinkInline(url) {
+  if (paymentWindowOpen) {
+    Swal.fire({
+      title: "Plată deja în curs",
+      html: `
+        Există deja o plată în desfășurare.<br><br>
+        <button id="cancel-payment" 
+                class="swal2-confirm swal2-styled" 
+                style="background:#dc2626">
+          Anulează plata curentă
+        </button>
+      `,
+      icon: "warning",
+      showConfirmButton: false,
+      didRender: () => {
+        document.getElementById("cancel-payment").onclick = () => {
+          cleanupPaymentWindow()
+          Swal.close()
+        }
+      }
+    })
+    return false
+  }
+
+  // mark flow started
+  paymentWindowOpen = true
+
+  // SweetAlert2 beautiful embedded iframe popup
+  Swal.fire({
+    title: "Finalizează plata",
+    width: "70%",
+    padding: "0",
+    background: "#f9fafb",
+    showConfirmButton: false,
+    allowOutsideClick: false,
+    customClass: {
+      popup: "rounded-2xl shadow-xl overflow-hidden"
+    },
+    html: `
+      <div style="
+        display:flex;
+        flex-direction:column;
+        height:80vh;
+        max-height:800px;
+      ">
+        <iframe 
+          src="${url}" 
+          style="
+            flex:1;
+            width:100%;
+            border:0;
+            background:white;
+          "
+          allow="payment *; fullscreen"
+        ></iframe>
+
+        <div style="
+          padding:12px;
+          background:#f1f5f9;
+          border-top:1px solid #e2e8f0;
+          text-align:right;
+        ">
+          <button id="cancel-payment" 
+                  style="
+                    background:#dc2626;
+                    color:white;
+                    border:none;
+                    padding:10px 18px;
+                    border-radius:8px;
+                    font-size:14px;
+                    cursor:pointer;
+                  ">
+            Anulează plata
+          </button>
+        </div>
+      </div>
+    `,
+    didRender: () => {
+      document.getElementById("cancel-payment").onclick = () => {
+        cleanupPaymentWindow()
+        Swal.close()
+
+        Swal.fire({
+          title: "Plata a fost anulată",
+          icon: "info",
+          confirmButtonColor: "#059669"
+        })
+      }
+    }
+  })
 
   return true
 }
@@ -481,7 +591,7 @@ function scheduleHashCheck(token, callback) {
 
   paymentStatusTimeout = window.setTimeout(async () => {
     try {
-      const { data } = await api.post('/payments/check-hash', { token })
+      const { data } = await api.post('/check-hash', { token })
       const response = data?.res ?? data?.data ?? data
 
       if (!response) {
@@ -596,7 +706,7 @@ function startExternalPayment() {
     errorMessage.value = null
 
     try {
-      const { data } = await api.post('/payments/fp-hash', payload)
+      const { data } = await api.post('/fp-hash', payload)
       const response = data?.res ?? data?.data ?? data
 
       const paymentUrl = response?.payment_url ?? response?.paymentUrl
@@ -635,7 +745,7 @@ function startExternalPayment() {
         const tranStatus = status.tran_status ?? status.status
         const tranMessage = status.tran_message ?? status.message ?? ''
 
-        if (tranStatus === '0' || tranStatus === true || tranStatus === 'success') {
+        if (tranStatus === '0' || tranStatus === true || tranStatus === 'approved') {
           await authStore.refreshInvoices().catch(() => {
             // erorile sunt gestionate în store
           })
