@@ -165,10 +165,22 @@
           <button
             type="button"
             class="w-full rounded-xl bg-emerald-600 px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500"
-            :disabled="true"
+            :disabled="isProcessingPayment || !selectedInvoices.length"
             @click="startExternalPayment"
           >
-            Continuă către plata securizată
+            <span v-if="isProcessingPayment" class="flex items-center justify-center gap-2">
+              <svg
+                class="h-4 w-4 animate-spin text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+              Se inițiază plata...
+            </span>
+            <span v-else>Continuă către plata securizată</span>
           </button>
 
           <p class="text-xs text-slate-400">
@@ -181,10 +193,10 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { getErrorMessage } from '@/utils/api'
+import api, { getErrorMessage } from '@/utils/api'
 import { formatCurrency, formatDate, statusMeta } from '@/utils/formatters'
 import Swal from 'sweetalert2'
 
@@ -194,6 +206,13 @@ const authStore = useAuthStore()
 const selectedInvoices = ref([])
 const isLoading = ref(false)
 const errorMessage = ref(null)
+const isProcessingPayment = ref(false)
+
+let paymentWindowInstance = null
+let paymentWindowOpen = false
+let paymentStatusTimeout = null
+let paymentFailsafeTimeout = null
+let shouldPollPaymentStatus = false
 
 const selectedInvoiceIds = computed(() => {
   const ids = []
@@ -356,38 +375,302 @@ onMounted(() => {
   }
 })
 
+onBeforeUnmount(() => {
+  cleanupPaymentWindow()
+})
+
+function generatePaymentToken() {
+  const randomPart = `${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`
+  const timestamp = Date.now().toString(36)
+  return `inv-${randomPart}-${timestamp}`
+}
+
+function cleanupPaymentWindow() {
+  if (paymentStatusTimeout) {
+    clearTimeout(paymentStatusTimeout)
+    paymentStatusTimeout = null
+  }
+
+  if (paymentFailsafeTimeout) {
+    clearTimeout(paymentFailsafeTimeout)
+    paymentFailsafeTimeout = null
+  }
+
+  shouldPollPaymentStatus = false
+
+  if (paymentWindowInstance && !paymentWindowInstance.closed) {
+    try {
+      paymentWindowInstance.close()
+    } catch (error) {
+      // fereastra poate fi deja închisă de utilizator
+    }
+  }
+
+  paymentWindowInstance = null
+  paymentWindowOpen = false
+}
+
+function openPaymentLink(url) {
+  if (paymentWindowOpen) {
+    Swal.fire({
+      title: 'Plată în desfășurare',
+      text: 'Există deja o fereastră de plată deschisă. Închide fereastra curentă înainte de a începe o nouă plată.',
+      icon: 'warning',
+      confirmButtonColor: '#059669'
+    })
+    return false
+  }
+
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  if (window.cordova?.InAppBrowser) {
+    const features =
+      window.device && window.device.platform?.toLowerCase() === 'android'
+        ? 'lefttoright=yes,location=yes,hideurlbar=yes,closebuttoncolor=#FFFFFF,navigationbuttoncolor=#FFFFFF,toolbarcolor=#282761,closebuttoncaption=Inchide,hidenavigationbuttons=yes,fullscreen=no,mediaPlaybackRequiresUserAction=no'
+        : 'fullscreen=no,allowInlineMediaPlayback=yes,enableViewportScale=yes,toolbarposition=top,hidenavigationbuttons=yes,location=no,closebuttoncaption=Inchide,clearcache=yes,clearsessioncache=yes,toolbarcolor=#282761,toolbartranslucent=no,closebuttoncolor=#FFFFFF,navigationbuttoncolor=#FFFFFF'
+
+    const inAppBrowser = window.cordova.InAppBrowser.open(url, '_blank', features)
+
+    paymentWindowOpen = true
+    paymentWindowInstance = inAppBrowser
+
+    inAppBrowser.addEventListener('exit', () => {
+      paymentWindowOpen = false
+      shouldPollPaymentStatus = false
+    })
+
+    return true
+  }
+
+  const openedWindow = window.open(
+    url,
+    '_blank',
+    'noopener=yes,noreferrer=yes,toolbarposition=top,location=no,closebuttoncaption=Inchide,clearcache=yes,clearsessioncache=yes'
+  )
+
+  if (!openedWindow) {
+    Swal.fire({
+      title: 'Fereastra a fost blocată',
+      text: 'Permite ferestrele pop-up pentru a putea continua plata.',
+      icon: 'warning',
+      confirmButtonColor: '#059669'
+    })
+    return false
+  }
+
+  paymentWindowInstance = openedWindow
+  paymentWindowOpen = true
+
+  const watcher = window.setInterval(() => {
+    if (openedWindow.closed) {
+      window.clearInterval(watcher)
+      paymentWindowOpen = false
+      shouldPollPaymentStatus = false
+    }
+  }, 250)
+
+  return true
+}
+
+function scheduleHashCheck(token, callback) {
+  if (!shouldPollPaymentStatus) {
+    return
+  }
+
+  paymentStatusTimeout = window.setTimeout(async () => {
+    try {
+      const { data } = await api.post('/payments/check-hash', { token })
+      const response = data?.res ?? data?.data ?? data
+
+      if (!response) {
+        if (paymentWindowOpen) {
+          scheduleHashCheck(token, callback)
+        } else {
+          callback(false)
+        }
+        return
+      }
+
+      const tranStatus = response.tran_status ?? response.status
+
+      if (tranStatus === '-1' || tranStatus === '' || tranStatus === 'pending') {
+        if (paymentWindowOpen) {
+          scheduleHashCheck(token, callback)
+        } else {
+          callback(false)
+        }
+        return
+      }
+
+      callback(response)
+    } catch (error) {
+      if (paymentWindowOpen) {
+        scheduleHashCheck(token, callback)
+      } else {
+        callback(false)
+      }
+    }
+  }, 1000)
+}
+
+function startHashCheck(token, callback) {
+  if (typeof window === 'undefined') {
+    return () => {}
+  }
+
+  shouldPollPaymentStatus = true
+  scheduleHashCheck(token, (status) => {
+    shouldPollPaymentStatus = false
+    if (paymentStatusTimeout) {
+      clearTimeout(paymentStatusTimeout)
+      paymentStatusTimeout = null
+    }
+    callback(status)
+  })
+
+  return () => {
+    shouldPollPaymentStatus = false
+    if (paymentStatusTimeout) {
+      clearTimeout(paymentStatusTimeout)
+      paymentStatusTimeout = null
+    }
+  }
+}
+
 function startExternalPayment() {
   if (!selectedInvoices.value.length) {
     errorMessage.value = 'Selectează cel puțin o factură înainte de a continua plata.'
     return
   }
 
-  if (selectedInvoices.value.length === 1) {
-    const invoice = selectedInvoices.value[0]
-    Swal.fire({
-      title: 'Continuă plata în siguranță',
-      text: `Vei fi redirecționat către pagina securizată pentru plata facturii ${invoice.number} în valoare de ${formatCurrency(
-        invoice.balance
-      )}.`,
-      icon: 'info',
-      confirmButtonText: 'Înțeleg',
-      confirmButtonColor: '#059669',
-      background: '#f8fafc',
-      color: '#0f172a'
-    })
-    return
-  }
+  const invoiceNumbers = selectedInvoices.value.map((invoice) => invoice.number).join(', ')
 
   Swal.fire({
-    title: 'Continuă plata în siguranță',
-    text: `Vei fi redirecționat către pagina securizată pentru plata a ${
-      selectedInvoices.value.length
-    } facturi în valoare totală de ${formatCurrency(selectedTotal.value)}.`,
+    title: 'Continuă către plata securizată',
+    html:
+      selectedInvoices.value.length === 1
+        ? `Vei fi redirecționat către pagina securizată pentru plata facturii <strong>${invoiceNumbers}</strong> în valoare de <strong>${formatCurrency(
+            selectedTotal.value
+          )}</strong>.`
+        : `Vei fi redirecționat către pagina securizată pentru plata a <strong>${selectedInvoices.value.length}</strong> facturi ( ${invoiceNumbers} ) în valoare totală de <strong>${formatCurrency(
+            selectedTotal.value
+          )}</strong>.`,
     icon: 'info',
-    confirmButtonText: 'Înțeleg',
+    showCancelButton: true,
+    confirmButtonText: 'Continuă',
+    cancelButtonText: 'Renunță',
     confirmButtonColor: '#059669',
     background: '#f8fafc',
     color: '#0f172a'
+  }).then(async (result) => {
+    if (!result.isConfirmed) {
+      Swal.fire({
+        title: 'Acțiune anulată',
+        text: 'Nu ai inițiat plata facturilor selectate.',
+        icon: 'info',
+        confirmButtonColor: '#059669'
+      })
+      return
+    }
+
+    const token = generatePaymentToken()
+    const payload = {
+      token,
+      customer_id: authStore.customer?.id ?? null,
+      invoices: selectedInvoices.value.map((invoice) => ({
+        id: invoice.id,
+        number: invoice.number,
+        amount: Number.parseFloat(invoice.balance ?? invoice.amount) || 0
+      })),
+      amount: Number.parseFloat(selectedTotal.value.toFixed(2)),
+      currency: 'RON',
+      order_desc:
+        selectedInvoices.value.length === 1
+          ? `Plată factură ${invoiceNumbers}`
+          : `Plată facturi ${invoiceNumbers}`
+    }
+
+    isProcessingPayment.value = true
+    errorMessage.value = null
+
+    try {
+      const { data } = await api.post('/payments/fp-hash', payload)
+      const response = data?.res ?? data?.data ?? data
+
+      const paymentUrl = response?.payment_url ?? response?.paymentUrl
+      if (!paymentUrl) {
+        throw new Error('Nu am primit linkul de plată de la server.')
+      }
+
+      const opened = openPaymentLink(paymentUrl)
+      if (!opened) {
+        return
+      }
+
+      if (typeof window !== 'undefined') {
+        if (paymentFailsafeTimeout) {
+          clearTimeout(paymentFailsafeTimeout)
+        }
+
+        paymentFailsafeTimeout = window.setTimeout(() => {
+          cleanupPaymentWindow()
+        }, 1000 * 60 * 5 + 10)
+      }
+
+      startHashCheck(token, async (status) => {
+        cleanupPaymentWindow()
+
+        if (status === false) {
+          Swal.fire({
+            title: 'Plata a fost anulată',
+            text: 'Nu am confirmarea plății. Dacă ai finalizat totuși plata, contactează-ne.',
+            icon: 'error',
+            confirmButtonColor: '#059669'
+          })
+          return
+        }
+
+        const tranStatus = status.tran_status ?? status.status
+        const tranMessage = status.tran_message ?? status.message ?? ''
+
+        if (tranStatus === '0' || tranStatus === true || tranStatus === 'success') {
+          await authStore.refreshInvoices().catch(() => {
+            // erorile sunt gestionate în store
+          })
+
+          Swal.fire({
+            title: 'Plata a fost efectuată cu succes',
+            text: 'Facturile selectate au fost marcate ca plătite.',
+            icon: 'success',
+            confirmButtonColor: '#059669'
+          })
+          return
+        }
+
+        Swal.fire({
+          title: 'Plata nu a fost finalizată',
+          html:
+            tranMessage
+              ? `Procesatorul de plăți a returnat mesajul: <strong>${tranMessage}</strong>. Încearcă din nou sau contactează suportul nostru.`
+              : 'Procesatorul de plăți nu a confirmat tranzacția. Încearcă din nou sau contactează suportul nostru.',
+          icon: 'error',
+          confirmButtonColor: '#059669'
+        })
+      })
+    } catch (error) {
+      cleanupPaymentWindow()
+      errorMessage.value = getErrorMessage(error, 'A apărut o eroare la inițierea plății. Încearcă din nou.')
+      Swal.fire({
+        title: 'Eroare',
+        text: errorMessage.value,
+        icon: 'error',
+        confirmButtonColor: '#059669'
+      })
+    } finally {
+      isProcessingPayment.value = false
+    }
   })
 }
 
