@@ -1,8 +1,8 @@
 <template>
   <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-slate-100 px-4 py-12">
-    <div class="w-full max-w-lg rounded-3xl bg-white p-8 shadow-lg ring-1 ring-emerald-100">
+    <div class="w-full max-w-2xl rounded-3xl bg-white p-8 shadow-lg ring-1 ring-emerald-100">
       <div class="mb-8 text-center">
-        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white text-xl font-semibold">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl text-white text-xl font-semibold">
           <img
             src="/alpin-logo.png"
             alt="Alpin Bio Solution"
@@ -14,25 +14,10 @@
       </div>
 
       <div class="mb-6 space-y-3 rounded-2xl bg-emerald-50/80 p-5 text-left text-sm text-emerald-800">
-        <h2 class="text-base font-semibold text-emerald-900">Pași de autentificare</h2>
-        <ol class="space-y-3">
-          <li class="flex items-start gap-3">
-            <span
-              class="mt-0.5 inline-flex h-6 w-6 flex-none items-center justify-center rounded-full bg-white text-xs font-semibold text-emerald-600 shadow"
-            >
-              1
-            </span>
-            <span><strong>Introdu numărul facturii</strong> primit pe e-mail sau pe suport fizic.</span>
-          </li>
-          <li class="flex items-start gap-3">
-            <span
-              class="mt-0.5 inline-flex h-6 w-6 flex-none items-center justify-center rounded-full bg-white text-xs font-semibold text-emerald-600 shadow"
-            >
-              2
-            </span>
-            <span><strong>Confirmă numele complet</strong> exact ca în documentele oficiale pentru validare.</span>
-          </li>
-        </ol>
+        <p class="text-gray-700">
+          <strong>Introdu numărul facturii</strong> primit pe e-mail sau pe suport fizic și
+          <strong>confirmă numele complet</strong> exact ca în documentele oficiale pentru validare.
+        </p>
       </div>
 
       <form class="space-y-5" @submit.prevent="handleSubmit">

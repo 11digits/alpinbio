@@ -126,7 +126,8 @@
         </div>
 
         <div
-          class="w-full max-w-sm space-y-5 rounded-2xl border border-slate-100 p-6 animate-fade-slide"
+          class="w-full max-w-sm space-y-5 rounded-2xl border border-slate-100 p-6 animate-fade-slide
+                sticky top-20 self-start bg-white z-10"
           style="animation-delay: .2s"
         >
           <h2 class="text-lg font-semibold text-slate-900">Sumar plată</h2>

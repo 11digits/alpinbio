@@ -98,7 +98,7 @@
       </div>
 
       <div class="mt-6 overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-100 text-left text-sm">
+        <table class="min-w-full divide-y divide-slate-100 text-left text-sm hidden sm:table">
           <thead>
             <tr class="text-xs uppercase tracking-wide text-slate-500">
               <th class="px-4 py-3 font-medium">Număr Factură</th>
@@ -131,6 +131,45 @@
             </tr>
           </tbody>
         </table>
+
+        <!-- Mobile card list -->
+        <div class="sm:hidden space-y-3 mt-4">
+          <div
+            v-for="invoice in latestInvoices"
+            :key="invoice.id"
+            class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-slide"
+          >
+            <div class="flex justify-between">
+              <span class="text-xs text-slate-500">Număr Factură</span>
+              <span class="font-semibold text-slate-900">{{ invoice.number }}</span>
+            </div>
+
+            <div class="flex justify-between mt-2">
+              <span class="text-xs text-slate-500">Data Emiterii</span>
+              <span>{{ formatDate(invoice.issueDate) }}</span>
+            </div>
+
+            <div class="flex justify-between mt-2">
+              <span class="text-xs text-slate-500">Valoare</span>
+              <span class="font-semibold text-slate-900">{{ formatCurrency(invoice.amount) }}</span>
+            </div>
+
+            <div class="flex justify-between mt-2">
+              <span class="text-xs text-slate-500">Status</span>
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
+                :class="statusClasses(statusMeta(invoice.status).tone)"
+              >
+                {{ statusMeta(invoice.status).label }}
+              </span>
+            </div>
+
+            <div class="flex justify-between mt-2">
+              <span class="text-xs text-slate-500">Scadență</span>
+              <span>{{ formatDate(invoice.dueDate) }}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   </div>

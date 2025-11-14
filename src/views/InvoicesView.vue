@@ -87,7 +87,7 @@
       </div>
 
       <div class="mt-4 overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-100 text-left text-sm">
+        <table class="min-w-full divide-y divide-slate-100 text-left text-sm hidden sm:table">
           <thead>
             <tr class="text-xs uppercase tracking-wide text-slate-500">
               <th class="px-4 py-3 font-medium">Selectează</th>
@@ -168,6 +168,98 @@
             </template>
           </tbody>
         </table>
+
+        <!-- Mobile Cards (visible only on mobile) -->
+        <div class="sm:hidden space-y-3 mt-4">
+          <!-- Loading state -->
+          <div
+            v-if="isLoading"
+            class="flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500"
+          >
+            <svg
+              class="h-5 w-5 animate-spin text-emerald-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <span>Se încarcă facturile...</span>
+          </div>
+
+          <!-- Empty state -->
+          <div
+            v-else-if="filteredInvoices.length === 0"
+            class="rounded-xl border border-slate-200 bg-white p-4 text-center text-sm text-slate-500 animate-fade-slide"
+          >
+            Nu există facturi care să corespundă filtrării curente.
+          </div>
+
+          <!-- Invoice cards -->
+          <div
+            v-else
+            v-for="(invoice, index) in filteredInvoices"
+            :key="invoice.id"
+            class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-slide"
+            :style="{ animationDelay: `${index * 60}ms` }"
+            @click="invoice.status === 'unpaid' && toggleInvoice(invoice.id)"
+          >
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-slate-500">Selectează</span>
+              <input
+                v-if="invoice.status === 'unpaid'"
+                type="checkbox"
+                class="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                :checked="selectedInvoices.includes(invoice.id)"
+                @change="toggleInvoice(invoice.id)"
+                @click.stop
+              />
+            </div>
+
+            <div class="flex justify-between mt-3">
+              <span class="text-xs text-slate-500">Număr Factură</span>
+              <span class="font-semibold text-slate-900">{{ invoice.number }}</span>
+            </div>
+
+            <div class="flex justify-between mt-2">
+              <span class="text-xs text-slate-500">Data Emiterii</span>
+              <span>{{ formatDate(invoice.issueDate) }}</span>
+            </div>
+
+            <div class="flex justify-between mt-2">
+              <span class="text-xs text-slate-500">Valoare Totală</span>
+              <span class="font-semibold text-slate-900">{{ formatCurrency(invoice.balance) }}</span>
+            </div>
+
+            <div class="flex justify-between mt-2">
+              <span class="text-xs text-slate-500">Status</span>
+              <span
+                class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
+                :class="statusClasses(statusMeta(invoice.status).tone)"
+              >
+                {{ statusMeta(invoice.status).label }}
+              </span>
+            </div>
+
+            <div class="flex justify-between mt-2">
+              <span class="text-xs text-slate-500">Data Scadență</span>
+              <span>{{ formatDate(invoice.dueDate) }}</span>
+            </div>
+
+            <div class="mt-4 flex justify-end">
+              <RouterLink
+                v-if="invoice.status === 'unpaid'"
+                :to="`/pay/${invoice.id}`"
+                class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50"
+                @click.stop
+              >
+                Plătește
+                <ArrowRightIcon class="h-4 w-4" />
+              </RouterLink>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div

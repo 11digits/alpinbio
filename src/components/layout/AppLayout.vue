@@ -1,6 +1,10 @@
 <template>
   <div class="min-h-screen bg-slate-50 lg:flex">
-    <aside class="hidden lg:flex lg:w-72 xl:w-80 lg:flex-col lg:justify-between lg:bg-white lg:border-r lg:border-slate-200">
+    <aside
+      class="hidden lg:flex lg:w-72 xl:w-80 lg:flex-col lg:justify-between
+            lg:bg-white lg:border-r lg:border-slate-200
+            fixed inset-y-0 left-0"
+    >
       <div class="px-6 py-8">
         <div class="flex items-center gap-3">
           <img
@@ -33,7 +37,7 @@
       </div>
     </aside>
 
-    <div class="flex min-h-screen flex-1 flex-col">
+    <div class="flex min-h-screen flex-1 flex-col lg:ml-72 xl:ml-80">
       <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200">
         <div class="px-4 sm:px-6">
           <div class="flex h-16 items-center justify-between lg:justify-end w-full lg:max-w-6xl lg:mx-auto lg:px-8">
