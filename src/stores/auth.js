@@ -42,10 +42,6 @@ function clearSession() {
   }
 }
 
-function normalizeName(value) {
-  return value?.toString().trim().replace(/\s+/g, ' ').toLowerCase() ?? ''
-}
-
 function maskName(name) {
   if (!name) return ''
 
@@ -65,7 +61,7 @@ function normalizeInvoice(invoice) {
 
   const amount = Number.parseFloat(invoice.amount ?? 0) || 0
   const balance = Number.parseFloat(invoice.balance ?? 0) || 0
-  const status = deriveStatus(invoice.status, invoice.due_at, balance)
+  const status = deriveStatus(invoice.status, invoice.due_at ?? invoice.dueDate, balance)
 
   return {
     id: invoice.id,
@@ -79,14 +75,13 @@ function normalizeInvoice(invoice) {
   }
 }
 
-function deriveStatus(apiStatus, dueDate, balance) {
+function deriveStatus(apiStatus, _dueDate, balance) {
   if (apiStatus === 'paid' || balance <= 0) {
     return 'paid'
   }
 
   return 'unpaid'
 }
-
 
 function normalizeCustomer(customer) {
   if (!customer) return null
@@ -105,14 +100,13 @@ export const useAuthStore = defineStore('auth', () => {
 
   const customer = ref(stored?.customer ?? null)
   const invoices = ref((stored?.invoices ?? []).map(normalizeInvoice))
-  const activeInvoice = ref(stored?.activeInvoice ? normalizeInvoice(stored.activeInvoice) : null)
   const verified = ref(Boolean(stored?.verified))
-  const invoiceNumber = ref(stored?.invoiceNumber ?? '')
   const lastSyncedAt = ref(stored?.lastSyncedAt ?? null)
+  const pendingVerification = ref(stored?.pendingVerification ?? null)
 
   const isLoading = ref(false)
-  const invoiceError = ref(null)
-  const verificationError = ref(null)
+  const contactError = ref(null)
+  const codeError = ref(null)
 
   const isAuthenticated = computed(() => verified.value && !!customer.value)
   const maskedCustomerName = computed(() => maskName(customer.value?.name))
@@ -130,15 +124,14 @@ export const useAuthStore = defineStore('auth', () => {
     return {
       customer: customer.value,
       invoices: invoices.value,
-      activeInvoice: activeInvoice.value,
       verified: verified.value,
-      invoiceNumber: invoiceNumber.value,
-      lastSyncedAt: lastSyncedAt.value
+      lastSyncedAt: lastSyncedAt.value,
+      pendingVerification: pendingVerification.value
     }
   }
 
-  watch([customer, invoices, activeInvoice, verified, invoiceNumber, lastSyncedAt], () => {
-    if (!customer.value && !verified.value) {
+  watch([customer, invoices, verified, lastSyncedAt, pendingVerification], () => {
+    if (!customer.value && !verified.value && !pendingVerification.value) {
       clearSession()
       return
     }
@@ -146,38 +139,82 @@ export const useAuthStore = defineStore('auth', () => {
     persistSession(snapshot())
   }, { deep: true })
 
-  async function lookupInvoice(number) {
-    if (!number) {
+  async function requestVerificationCode({ contact, type = 'email' }) {
+    const selectedType = type === 'phone' ? 'phone' : 'email'
+    const trimmedContact = contact?.toString().trim()
+
+    if (!trimmedContact) {
+      contactError.value =
+        selectedType === 'phone'
+          ? 'Introduceți numărul de telefon înregistrat.'
+          : 'Introduceți adresa de email înregistrată.'
       return false
     }
 
     isLoading.value = true
-    invoiceError.value = null
-    verificationError.value = null
+    contactError.value = null
+    codeError.value = null
 
     try {
-      const trimmed = number.trim()
-      const { data: invoiceData } = await api.get(`/invoices/${encodeURIComponent(trimmed)}`)
+      const { data } = await api.post('/auth/start', {
+        contact: trimmedContact,
+        type: selectedType
+      })
 
-      const normalizedInvoice = normalizeInvoice(invoiceData)
-      invoiceNumber.value = trimmed
-      activeInvoice.value = normalizedInvoice
+      pendingVerification.value = {
+        sessionId: data.session_id,
+        contactType: data.contact_type ?? selectedType,
+        contactValue: trimmedContact,
+        maskedContact: data.masked_contact ?? trimmedContact,
+        customerHint: data.customer_hint ?? null,
+        expiresAt: data.expires_at ?? null,
+        debugCode: data.debug_code ?? null
+      }
 
-      const { data: customerData } = await api.get(`/customers/${normalizedInvoice.customerId}`)
-
-      customer.value = normalizeCustomer(customerData)
-      invoices.value = (customerData.invoices ?? []).map(normalizeInvoice)
-      lastSyncedAt.value = new Date().toISOString()
+      customer.value = null
+      invoices.value = []
       verified.value = false
 
       return true
     } catch (error) {
-      invoiceError.value = getErrorMessage(error, 'Factura introdusă nu a fost găsită.')
-      customer.value = null
-      invoices.value = []
-      activeInvoice.value = null
-      verified.value = false
-      invoiceNumber.value = number.trim()
+      contactError.value = getErrorMessage(error, 'Nu am găsit niciun client cu aceste informații.')
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function verifyCode(code) {
+    const trimmedCode = code?.toString().trim()
+
+    if (!pendingVerification.value?.sessionId) {
+      codeError.value = 'Solicitați un cod de verificare pentru a continua.'
+      return false
+    }
+
+    if (!trimmedCode) {
+      codeError.value = 'Introduceți codul primit prin SMS sau email.'
+      return false
+    }
+
+    isLoading.value = true
+    codeError.value = null
+
+    try {
+      const { data } = await api.post('/auth/verify', {
+        session_id: pendingVerification.value.sessionId,
+        code: trimmedCode
+      })
+
+      customer.value = normalizeCustomer(data.customer)
+      invoices.value = (data.customer?.invoices ?? data.invoices ?? []).map(normalizeInvoice)
+      verified.value = true
+      lastSyncedAt.value = new Date().toISOString()
+      pendingVerification.value = null
+
+      return true
+    } catch (error) {
+      codeError.value = getErrorMessage(error, 'Codul introdus nu este corect sau a expirat.')
       return false
     } finally {
       isLoading.value = false
@@ -197,7 +234,6 @@ export const useAuthStore = defineStore('auth', () => {
       lastSyncedAt.value = new Date().toISOString()
       return invoices.value
     } catch (error) {
-      invoiceError.value = getErrorMessage(error)
       throw error
     } finally {
       isLoading.value = false
@@ -209,67 +245,49 @@ export const useAuthStore = defineStore('auth', () => {
       return null
     }
 
-    try {
-      const cached = invoices.value.find((invoice) => invoice.id === id || invoice.number === id)
-      if (cached) {
-        return cached
-      }
-
-      const { data } = await api.get(`/invoices/${encodeURIComponent(id)}`)
-      return normalizeInvoice(data)
-    } catch (error) {
-      invoiceError.value = getErrorMessage(error, 'Factura solicitată nu a putut fi încărcată.')
-      throw error
+    const cached = invoices.value.find((invoice) => invoice.id === id || invoice.number === id)
+    if (cached) {
+      return cached
     }
+
+    const { data } = await api.get(`/invoices/${encodeURIComponent(id)}`)
+    return normalizeInvoice(data)
   }
 
-  function verifyCustomerName(inputName) {
-    if (!customer.value) {
-      verificationError.value = 'Introduceți mai întâi numărul facturii.'
-      return false
-    }
-
-    const isValid = (inputName == 'TEST2025') || normalizeName(customer.value.name) === normalizeName(inputName)
-
-    if (isValid) {
-      verificationError.value = null
-      verified.value = true
-      return true
-    }
-
-    verificationError.value = 'Numele introdus nu corespunde facturii selectate.'
-    return false
+  function resetPendingVerification() {
+    pendingVerification.value = null
+    contactError.value = null
+    codeError.value = null
   }
 
   function logout() {
     customer.value = null
     invoices.value = []
-    activeInvoice.value = null
     verified.value = false
-    invoiceNumber.value = ''
     lastSyncedAt.value = null
-    invoiceError.value = null
-    verificationError.value = null
+    pendingVerification.value = null
+    contactError.value = null
+    codeError.value = null
     clearSession()
   }
 
   return {
     customer,
     invoices,
-    activeInvoice,
-    invoiceNumber,
     verified,
     lastSyncedAt,
+    pendingVerification,
     isLoading,
-    invoiceError,
-    verificationError,
+    contactError,
+    codeError,
     isAuthenticated,
     maskedCustomerName,
     outstandingBalance,
-    lookupInvoice,
-    verifyCustomerName,
+    requestVerificationCode,
+    verifyCode,
     refreshInvoices,
     fetchInvoice,
+    resetPendingVerification,
     logout
   }
 })
