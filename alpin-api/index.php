@@ -93,6 +93,98 @@ function createPayment(PDO $db, $invoiceId, $amount, $method, $ref)
     return $db->lastInsertId();
 }
 
+function normalizePhoneValue($value)
+{
+    return preg_replace('/[^0-9]/', '', $value ?? '');
+}
+
+function findCustomerByContact(PDO $db, $contact, $type)
+{
+    if ($type === 'phone') {
+        $normalized = normalizePhoneValue($contact);
+        $sql = "SELECT * FROM customers WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '+', ''), '-', ''), '(' , '') = ? LIMIT 1";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$normalized]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    $sql = "SELECT * FROM customers WHERE LOWER(email) = LOWER(?) LIMIT 1";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([$contact]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function generateVerificationCode()
+{
+    return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+}
+
+function createVerificationSession(PDO $db, $customerId, $contact, $code)
+{
+    $expiresAt = (new DateTime('+10 minutes'))->format('Y-m-d H:i:s');
+
+    $sql = "INSERT INTO sessions (customer_id, phone, verification_code, expires_at)
+            VALUES (?, ?, ?, ?)";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([$customerId, $contact, $code, $expiresAt]);
+
+    return [
+        'id' => $db->lastInsertId(),
+        'expires_at' => $expiresAt
+    ];
+}
+
+function getVerificationSession(PDO $db, $sessionId)
+{
+    $sql = "SELECT * FROM sessions WHERE id = ? LIMIT 1";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([$sessionId]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+function markSessionVerified(PDO $db, $sessionId)
+{
+    $sql = "UPDATE sessions SET verified_at = NOW() WHERE id = ?";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([$sessionId]);
+}
+
+function maskDisplayName($name)
+{
+    if (!$name) {
+        return null;
+    }
+
+    $parts = preg_split('/\s+/', trim($name));
+    $masked = array_map(function ($part) {
+        $visible = strtoupper(substr($part, 0, 2));
+        $remaining = max(strlen($part) - 2, 3);
+        return $visible . str_repeat('*', $remaining);
+    }, array_filter($parts));
+
+    return implode(' ', $masked);
+}
+
+function maskContact($type, $value)
+{
+    if ($type === 'phone') {
+        $numbers = normalizePhoneValue($value);
+        if (strlen($numbers) <= 4) {
+            return str_repeat('*', max(strlen($numbers) - 2, 0)) . substr($numbers, -2);
+        }
+
+        return substr($numbers, 0, 2) . str_repeat('*', strlen($numbers) - 4) . substr($numbers, -2);
+    }
+
+    if (!$value || strpos($value, '@') === false) {
+        return $value;
+    }
+
+    [$local, $domain] = explode('@', $value, 2);
+    $localVisible = substr($local, 0, 2);
+    return $localVisible . str_repeat('*', max(strlen($local) - 2, 3)) . '@' . $domain;
+}
+
 /**
  * ---------------------------------------------------------------------------
  *  ROUTING
@@ -196,6 +288,80 @@ switch ($resource) {
                 'message' => 'Plata a fost înregistrată.',
                 'payment_id' => $paymentId
             ], 201);
+        }
+
+        jsonResponse(['message' => 'Metodă neacceptată.'], 405);
+        break;
+
+
+    case 'auth':
+        if ($method === 'POST' && isset($segments[1]) && $segments[1] === 'start') {
+            $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+            $type = strtolower($payload['type'] ?? 'email');
+            $contact = trim($payload['contact'] ?? '');
+
+            if (!in_array($type, ['email', 'phone'], true)) {
+                jsonResponse(['message' => 'Tipul de contact nu este suportat.'], 422);
+            }
+
+            if ($contact === '') {
+                $field = $type === 'phone' ? 'numărul de telefon' : 'adresa de email';
+                jsonResponse(['message' => "Introduceți $field."], 422);
+            }
+
+            $customer = findCustomerByContact($db, $contact, $type);
+            if (!$customer) {
+                jsonResponse(['message' => 'Nu am găsit niciun client cu aceste informații.'], 404);
+            }
+
+            $code = generateVerificationCode();
+            $session = createVerificationSession($db, $customer['id'], $type === 'phone' ? normalizePhoneValue($contact) : $contact, $code);
+
+            jsonResponse([
+                'message' => 'Codul de verificare a fost trimis.',
+                'session_id' => $session['id'],
+                'expires_at' => $session['expires_at'],
+                'contact_type' => $type,
+                'masked_contact' => maskContact($type, $contact),
+                'customer_hint' => maskDisplayName($customer['name']),
+                'debug_code' => $code
+            ], 201);
+        }
+
+        if ($method === 'POST' && isset($segments[1]) && $segments[1] === 'verify') {
+            $payload = json_decode(file_get_contents('php://input'), true) ?? [];
+            $sessionId = $payload['session_id'] ?? null;
+            $code = trim($payload['code'] ?? '');
+
+            if (!$sessionId || $code === '') {
+                jsonResponse(['message' => 'Sesiunea și codul sunt obligatorii.'], 422);
+            }
+
+            $session = getVerificationSession($db, $sessionId);
+            if (!$session) {
+                jsonResponse(['message' => 'Sesiunea nu există sau a expirat.'], 404);
+            }
+
+            if (strtotime($session['expires_at']) < time()) {
+                jsonResponse(['message' => 'Codul a expirat. Solicită unul nou.'], 410);
+            }
+
+            if ($session['verification_code'] !== $code) {
+                jsonResponse(['message' => 'Codul introdus nu este corect.'], 422);
+            }
+
+            $customer = getCustomer($db, $session['customer_id']);
+            if (!$customer) {
+                jsonResponse(['message' => 'Clientul nu a fost găsit.'], 404);
+            }
+
+            $customer['invoices'] = getCustomerInvoices($db, $customer['id']);
+            markSessionVerified($db, $session['id']);
+
+            jsonResponse([
+                'message' => 'Autentificare reușită.',
+                'customer' => $customer
+            ]);
         }
 
         jsonResponse(['message' => 'Metodă neacceptată.'], 405);

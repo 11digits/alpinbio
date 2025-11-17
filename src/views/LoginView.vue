@@ -10,60 +10,97 @@
           />
         </div>
         <h1 class="mt-4 text-2xl font-semibold text-slate-900">Autentificare</h1>
-        <p class="mt-2 text-sm text-slate-500">Introduceți detaliile pentru a accesa facturile și plățile.</p>
-      </div>
-
-      <div class="mb-6 space-y-3 rounded-2xl bg-emerald-50/80 p-5 text-left text-sm text-emerald-800">
-        <p class="text-gray-700">
-          <strong>Introdu numărul facturii</strong> primit pe e-mail sau pe suport fizic și
-          <strong>confirmă numele complet</strong> exact ca în documentele oficiale pentru validare.
+        <p class="mt-2 text-sm text-slate-500">
+          Conectează-te cu numărul de telefon sau adresa de email asociată contului tău.
         </p>
       </div>
 
-      <form class="space-y-5" @submit.prevent="handleSubmit">
-        <div>
-          <label class="text-sm font-medium text-slate-600" for="invoice">Număr factură</label>
-          <div class="mt-1">
-            <input
-              id="invoice"
-              v-model="form.invoiceNumber"
-              type="text"
-              :disabled="authStore.isLoading || hasVerifiedInvoice"
-              required
-              placeholder="Introduceți numărul facturii"
-              class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:bg-slate-100"
-            />
-          </div>
-          <p v-if="authStore.invoiceError" class="mt-2 text-sm text-rose-600">{{ authStore.invoiceError }}</p>
-        </div>
-
-        <div v-if="hasVerifiedInvoice" class="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          <p>
-            Factura aparține clientului
-            <span class="font-semibold">{{ authStore.maskedCustomerName }}</span>.
+      <div class="mb-6 grid gap-3 rounded-2xl bg-emerald-50/70 p-5 text-left text-sm text-emerald-900 sm:grid-cols-2">
+        <div class="rounded-2xl border border-emerald-100/60 bg-white/70 p-4">
+          <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Pasul 1</p>
+          <p class="mt-2 text-slate-700">
+            Selectează metoda preferată și introdu datele de contact pentru a primi un cod unic.
           </p>
-          <p class="mt-1">Completează numele complet pentru a continua autentificarea.</p>
-          <button
-            type="button"
-            class="mt-2 text-xs font-semibold text-emerald-700 underline decoration-dotted hover:text-emerald-800"
-            @click="resetInvoice"
-          >
-            Schimbă factura introdusă
-          </button>
+        </div>
+        <div class="rounded-2xl border border-emerald-100/60 bg-white/70 p-4">
+          <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Pasul 2</p>
+          <p class="mt-2 text-slate-700">
+            Introdu codul de 6 cifre primit prin SMS sau email pentru a accesa facturile și plățile.
+          </p>
+        </div>
+      </div>
+
+      <form class="space-y-5" @submit.prevent="handleSubmit">
+        <div v-if="!hasPendingVerification">
+          <p class="text-sm font-medium text-slate-600">Alege metoda de verificare</p>
+          <div class="mt-2 grid gap-3 sm:grid-cols-2">
+            <button
+              v-for="method in contactMethods"
+              :key="method.value"
+              type="button"
+              :class="[
+                'rounded-2xl border px-4 py-3 text-left transition',
+                form.contactType === method.value
+                  ? 'border-emerald-500 bg-emerald-50/70 text-emerald-900'
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200'
+              ]"
+              @click="selectMethod(method.value)"
+            >
+              <p class="font-semibold">{{ method.label }}</p>
+              <p class="mt-1 text-xs text-slate-500">{{ method.description }}</p>
+            </button>
+          </div>
         </div>
 
-        <div v-if="hasVerifiedInvoice">
-          <label class="text-sm font-medium text-slate-600" for="full-name">Nume complet</label>
+        <div v-if="!hasPendingVerification">
+          <label class="text-sm font-medium text-slate-600" for="contact-input">{{ currentMethod.label }}</label>
           <input
-            id="full-name"
-            v-model="form.fullName"
-            type="text"
+            id="contact-input"
+            v-model="form.contactValue"
+            :type="currentMethod.inputType"
             :disabled="authStore.isLoading"
-            required
-            placeholder="Scrie numele complet exact ca pe factură"
+            :placeholder="currentMethod.placeholder"
             class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:bg-slate-100"
+            required
           />
-          <p v-if="authStore.verificationError" class="mt-2 text-sm text-rose-600">{{ authStore.verificationError }}</p>
+          <p v-if="authStore.contactError" class="mt-2 text-sm text-rose-600">{{ authStore.contactError }}</p>
+        </div>
+
+        <div v-else class="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          <p>
+            Am trimis un cod de acces către <strong>{{ pendingInfo.maskedContact }}</strong>.
+          </p>
+          <p v-if="pendingInfo.customerHint" class="mt-1 text-emerald-700">
+            Cont asociat: <span class="font-semibold">{{ pendingInfo.customerHint }}</span>
+          </p>
+          <p v-if="pendingInfo.debugCode" class="mt-2 text-xs text-emerald-600/80">
+            Cod demo pentru testare: <strong>{{ pendingInfo.debugCode }}</strong>
+          </p>
+        </div>
+
+        <div v-if="hasPendingVerification">
+          <label class="text-sm font-medium text-slate-600" for="verification-code">Cod de verificare</label>
+          <input
+            id="verification-code"
+            v-model="form.verificationCode"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            maxlength="6"
+            placeholder="000000"
+            :disabled="authStore.isLoading"
+            class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-center text-lg tracking-[0.3em] text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:bg-slate-100"
+            required
+          />
+          <p v-if="authStore.codeError" class="mt-2 text-sm text-rose-600">{{ authStore.codeError }}</p>
+          <div class="mt-3 flex flex-wrap gap-4 text-xs font-semibold text-emerald-700">
+            <button type="button" class="transition hover:text-emerald-500" @click="resendCode" :disabled="authStore.isLoading">
+              Retrimite codul
+            </button>
+            <button type="button" class="transition hover:text-emerald-500" @click="changeContact" :disabled="authStore.isLoading">
+              Schimbă metoda
+            </button>
+          </div>
         </div>
 
         <button
@@ -81,7 +118,7 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
           </svg>
-          <span>{{ hasVerifiedInvoice ? 'Autentificare' : 'Verifică factura' }}</span>
+          <span>{{ hasPendingVerification ? 'Verifică codul' : 'Trimite codul de acces' }}</span>
         </button>
       </form>
 
@@ -102,74 +139,122 @@ const authStore = useAuthStore()
 
 const appVersion = __APP_VERSION__
 
+const contactMethods = [
+  {
+    value: 'email',
+    label: 'Adresă de email',
+    description: 'Trimitem codul pe emailul asociat contului.',
+    placeholder: 'exemplu@companie.ro',
+    inputType: 'email'
+  },
+  {
+    value: 'phone',
+    label: 'Număr de telefon',
+    description: 'Primești codul prin SMS.',
+    placeholder: '07xx xxx xxx',
+    inputType: 'tel'
+  }
+]
+
 const form = reactive({
-  invoiceNumber: authStore.invoiceNumber ?? '',
-  fullName: ''
+  contactType: authStore.pendingVerification?.contactType ?? 'email',
+  contactValue: authStore.pendingVerification?.contactValue ?? '',
+  verificationCode: ''
 })
 
-const hasVerifiedInvoice = computed(() => Boolean(authStore.customer))
+const hasPendingVerification = computed(() => Boolean(authStore.pendingVerification))
+const pendingInfo = computed(() => authStore.pendingVerification ?? null)
+
+const currentMethod = computed(() =>
+  contactMethods.find((method) => method.value === form.contactType) ?? contactMethods[0]
+)
+
 const canSubmit = computed(() => {
-  if (!hasVerifiedInvoice.value) {
-    return Boolean(form.invoiceNumber)
+  if (!hasPendingVerification.value) {
+    return Boolean(form.contactValue.trim())
   }
 
-  return Boolean(form.fullName.trim())
+  return form.verificationCode.trim().length >= 4
 })
 
 watch(
-  () => authStore.invoiceNumber,
-  (value) => {
-    if (value && !form.invoiceNumber) {
-      form.invoiceNumber = value
+  () => form.contactValue,
+  () => {
+    if (authStore.contactError) {
+      authStore.contactError = null
+    }
+  }
+)
+
+watch(
+  () => form.verificationCode,
+  () => {
+    if (authStore.codeError) {
+      authStore.codeError = null
+    }
+  }
+)
+
+watch(
+  () => authStore.pendingVerification,
+  (pending) => {
+    if (pending?.contactValue) {
+      form.contactValue = pending.contactValue
+    }
+
+    if (pending?.contactType) {
+      form.contactType = pending.contactType
+    }
+
+    if (!pending) {
+      form.verificationCode = ''
     }
   },
   { immediate: true }
 )
 
-watch(
-  () => form.invoiceNumber,
-  () => {
-    if (authStore.invoiceError) {
-      authStore.invoiceError = null
-    }
-  }
-)
-
-watch(
-  () => form.fullName,
-  () => {
-    if (authStore.verificationError) {
-      authStore.verificationError = null
-    }
-  }
-)
-
-async function lookupInvoice() {
-  if (!form.invoiceNumber) {
+function selectMethod(value) {
+  if (hasPendingVerification.value) {
     return
   }
 
-  const success = await authStore.lookupInvoice(form.invoiceNumber)
-  if (success) {
-    form.fullName = ''
-  }
+  form.contactType = value
 }
 
 async function handleSubmit() {
-  if (!hasVerifiedInvoice.value) {
-    await lookupInvoice()
+  if (!hasPendingVerification.value) {
+    const success = await authStore.requestVerificationCode({
+      contact: form.contactValue,
+      type: form.contactType
+    })
+
+    if (success) {
+      form.verificationCode = ''
+    }
+
     return
   }
 
-  if (authStore.verifyCustomerName(form.fullName)) {
-    await authStore.refreshInvoices()
+  const success = await authStore.verifyCode(form.verificationCode)
+  if (success) {
     router.push({ name: 'dashboard' })
   }
 }
 
-function resetInvoice() {
-  authStore.logout()
-  form.invoiceNumber = ''
-  form.fullName = ''
+async function resendCode() {
+  if (!pendingInfo.value) {
+    return
+  }
+
+  await authStore.requestVerificationCode({
+    contact: pendingInfo.value.contactValue,
+    type: pendingInfo.value.contactType
+  })
+  form.verificationCode = ''
+}
+
+function changeContact() {
+  authStore.resetPendingVerification()
+  form.verificationCode = ''
 }
 </script>
