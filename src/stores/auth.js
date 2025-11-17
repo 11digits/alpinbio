@@ -177,6 +177,32 @@ export const useAuthStore = defineStore('auth', () => {
 
       return true
     } catch (error) {
+      const status = error?.response?.status
+      const data = error?.response?.data
+
+      // 🔥 CASE 1: Cooldown (code already generated)
+      if (status === 429 && data?.session_id) {
+
+          pendingVerification.value = {
+              sessionId: data.session_id,
+              contactType: data.contact_type ?? selectedType,
+              contactValue: trimmedContact,
+              maskedContact: data.masked_contact ?? trimmedContact,
+              customerHint: data.customer_hint ?? null,
+              expiresAt: data.expires_at ?? null
+          }
+
+          // Show cooldown message but do NOT treat as an error
+          contactError.value = data.message || 'Codul a fost deja trimis. Verifică mesajele.'
+
+          customer.value = null
+          invoices.value = []
+          verified.value = false
+
+          return true   // 🔥 important — the flow continues!
+      }
+
+      // 🔥 CASE 2: Any real error (404, 422, etc.)
       contactError.value = getErrorMessage(error, 'Nu am găsit niciun client cu aceste informații.')
       return false
     } finally {

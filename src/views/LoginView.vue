@@ -15,20 +15,22 @@
         </p>
       </div>
 
-      <div class="mb-6 grid gap-3 rounded-2xl bg-emerald-50/70 p-5 text-left text-sm text-emerald-900 sm:grid-cols-2">
-        <div class="rounded-2xl border border-emerald-100/60 bg-white/70 p-4">
-          <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Pasul 1</p>
-          <p class="mt-2 text-slate-700">
+      <div class="mb-4 grid gap-2 rounded-xl bg-emerald-50/60 p-3 text-left text-sm text-emerald-900 sm:grid-cols-2">
+        <div class="rounded-xl border border-emerald-100/60 bg-white/70 p-3">
+          <p class="text-[10px] font-semibold uppercase tracking-wide text-emerald-600">Pasul 1</p>
+          <p class="mt-1 text-slate-700 leading-snug">
             Selectează metoda preferată și introdu datele de contact pentru a primi un cod unic.
           </p>
         </div>
-        <div class="rounded-2xl border border-emerald-100/60 bg-white/70 p-4">
-          <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Pasul 2</p>
-          <p class="mt-2 text-slate-700">
+
+        <div class="rounded-xl border border-emerald-100/60 bg-white/70 p-3">
+          <p class="text-[10px] font-semibold uppercase tracking-wide text-emerald-600">Pasul 2</p>
+          <p class="mt-1 text-slate-700 leading-snug">
             Introdu codul de 6 cifre primit prin SMS sau email pentru a accesa facturile și plățile.
           </p>
         </div>
       </div>
+
 
       <form class="space-y-5" @submit.prevent="handleSubmit">
         <div v-if="!hasPendingVerification">
@@ -62,8 +64,7 @@
             :placeholder="currentMethod.placeholder"
             class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:bg-slate-100"
             required
-          />
-          <p v-if="authStore.contactError" class="mt-2 text-sm text-rose-600">{{ authStore.contactError }}</p>
+          />          
         </div>
 
         <div v-else class="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -78,8 +79,11 @@
           </p>
         </div>
 
-        <div v-if="hasPendingVerification">
-          <label class="text-sm font-medium text-slate-600" for="verification-code">Cod de verificare</label>
+        <div v-if="hasPendingVerification" class="space-y-3">
+          <label class="text-sm font-medium text-slate-600" for="verification-code">
+            Cod de verificare
+          </label>
+
           <input
             id="verification-code"
             v-model="form.verificationCode"
@@ -89,20 +93,38 @@
             maxlength="6"
             placeholder="000000"
             :disabled="authStore.isLoading"
-            class="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-center text-lg tracking-[0.3em] text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 disabled:bg-slate-100"
+            class="mt-1 w-full rounded-2xl border border-slate-300 px-4 py-3 text-center text-xl tracking-[0.35em] text-slate-900 
+                  shadow-sm transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-300 disabled:bg-slate-100"
             required
           />
-          <p v-if="authStore.codeError" class="mt-2 text-sm text-rose-600">{{ authStore.codeError }}</p>
-          <div class="mt-3 flex flex-wrap gap-4 text-xs font-semibold text-emerald-700">
-            <button type="button" class="transition hover:text-emerald-500" @click="resendCode" :disabled="authStore.isLoading">
+
+          <p v-if="authStore.codeError" class="mt-2 text-sm text-rose-600">
+            {{ authStore.codeError }}
+          </p>
+
+          <div class="pt-4 flex items-center justify-between border-t border-slate-200">
+            <button
+              type="button"
+              @click="resendCode"
+              :disabled="authStore.isLoading"
+              class="text-slate-500 hover:text-slate-700 text-sm font-medium transition"
+            >              
               Retrimite codul
             </button>
-            <button type="button" class="transition hover:text-emerald-500" @click="changeContact" :disabled="authStore.isLoading">
+
+            <button
+              type="button"
+              @click="changeContact"
+              :disabled="authStore.isLoading"
+              class="text-slate-500 hover:text-slate-700 text-sm font-medium transition"
+            >
               Schimbă metoda
             </button>
           </div>
         </div>
-
+        
+        <p v-if="authStore.contactError" class="mt-2 text-sm text-rose-600">{{ authStore.contactError }}</p>
+        
         <button
           type="submit"
           class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-emerald-200"
@@ -122,9 +144,24 @@
         </button>
       </form>
 
-      <p class="mt-8 text-center text-xs text-slate-400">
+      <div class="mt-8 text-center text-xs text-slate-400">
+        <div class="grid grid-cols-4 gap-4 place-items-center mb-4">
+          <a href="https://ec.europa.eu/consumers/odr/main/index.cfm?event=main.home2.show&lng=RO" target="_blank">
+            <img src="/anpc-sol.png" alt="SOL" class="w-20 opacity-90 hover:opacity-100 transition" />
+          </a>
+          <a href="https://anpc.ro/ce-este-sal/" target="_blank">
+            <img src="/anpc-sal.png" alt="SAL" class="w-20 opacity-90 hover:opacity-100 transition" />
+          </a>
+          <a href="https://anpc.ro/" target="_blank">
+            <img src="/anpc-logo.png" alt="ANPC" class="w-20 opacity-90 hover:opacity-100 transition" />
+          </a>
+          <a href="https://www.euplatesc.ro/" target="_blank">
+            <img src="/logo-euplatesc.svg" alt="EuPlătesc" class="w-20 opacity-90 hover:opacity-100 transition" />
+          </a>
+        </div>
+
         Versiune aplicație {{ appVersion }}
-      </p>
+      </div>
     </div>
   </div>
 </template>
@@ -144,7 +181,7 @@ const contactMethods = [
     value: 'email',
     label: 'Adresă de email',
     description: 'Trimitem codul pe emailul asociat contului.',
-    placeholder: 'exemplu@companie.ro',
+    placeholder: 'exemplu@adresa-mail.ro',
     inputType: 'email'
   },
   {
@@ -219,6 +256,7 @@ function selectMethod(value) {
   }
 
   form.contactType = value
+  form.contactValue = ''
 }
 
 async function handleSubmit() {

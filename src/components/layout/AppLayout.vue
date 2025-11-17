@@ -33,7 +33,24 @@
         </nav>
       </div>
       <div class="px-6 py-6 border-t border-slate-100 text-xs text-slate-400">
-        Versiune aplicație {{ appVersion }}
+        <div class="grid grid-cols-2 gap-4 place-items-center mb-4">
+          <a href="https://ec.europa.eu/consumers/odr/main/index.cfm?event=main.home2.show&lng=RO" target="_blank">
+            <img src="/anpc-sol.png" alt="SOL" class="w-20 opacity-90 hover:opacity-100 transition" />
+          </a>
+          <a href="https://anpc.ro/ce-este-sal/" target="_blank">
+            <img src="/anpc-sal.png" alt="SAL" class="w-20 opacity-90 hover:opacity-100 transition" />
+          </a>
+          <a href="https://anpc.ro/" target="_blank">
+            <img src="/anpc-logo.png" alt="ANPC" class="w-20 opacity-90 hover:opacity-100 transition" />
+          </a>
+          <a href="https://www.euplatesc.ro/" target="_blank">
+            <img src="/logo-euplatesc.svg" alt="EuPlătesc" class="w-20 opacity-90 hover:opacity-100 transition" />
+          </a>
+        </div>
+
+        <div class="text-center text-xs text-slate-400">
+          Versiune aplicație {{ appVersion }}
+        </div>
       </div>
     </aside>
 
@@ -55,8 +72,8 @@
             <!-- Right user block -->
             <div class="flex items-center gap-3">
               <div class="hidden sm:flex flex-col text-right">
-                <span class="text-sm font-semibold text-slate-900">{{ customerName }}</span>
-                <span class="text-xs text-slate-500">{{ customerEmail }}</span>
+                <span class="text-sm font-semibold text-slate-900">[{{customerId}}] {{ customerName }}</span>
+                <span class="text-xs text-slate-500">{{ customerEmail }} - {{ customerPhone }}</span>
               </div>
               <div class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold">
                 {{ customerInitials }}
@@ -127,8 +144,10 @@ const router = useRouter()
 const authStore = useAuthStore()
 const appVersion = __APP_VERSION__
 
+const customerId = computed(() => authStore.customer?.id ?? '000000')
 const customerName = computed(() => authStore.customer?.name ?? 'Client Alpin Bio')
 const customerEmail = computed(() => authStore.customer?.email ?? 'Email indisponibil')
+const customerPhone = computed(() => authStore.customer?.phone ?? 'Telefon indisponibil')
 const customerInitials = computed(() => {
   const source = authStore.customer?.name ?? authStore.customer?.email ?? 'AB'
   return source

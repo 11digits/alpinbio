@@ -47,7 +47,7 @@
             v-model="statusFilter"
             class="w-full border-none bg-transparent text-sm text-slate-700 focus:outline-none"
           >
-            <option value="all">Toate statusurile</option>
+            <option value="all">Toate</option>
             <option value="paid">Plătite</option>
             <option value="unpaid">Neplătite</option>
           </select>

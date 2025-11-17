@@ -98,7 +98,7 @@
       </div>
 
       <div class="mt-6 overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-100 text-left text-sm hidden sm:table">
+        <table v-if="latestInvoices.length" class="min-w-full divide-y divide-slate-100 text-left text-sm hidden sm:table">
           <thead>
             <tr class="text-xs uppercase tracking-wide text-slate-500">
               <th class="px-4 py-3 font-medium">Număr Factură</th>
@@ -131,6 +131,9 @@
             </tr>
           </tbody>
         </table>
+        <div v-else class="rounded-xl border border-slate-200 bg-white p-4 text-center text-sm text-slate-500 animate-fade-slide">
+           Nu există facturi de afișat.
+        </div>
 
         <!-- Mobile card list -->
         <div class="sm:hidden space-y-3 mt-4">
