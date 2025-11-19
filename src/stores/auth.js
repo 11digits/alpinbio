@@ -71,7 +71,8 @@ function normalizeInvoice(invoice) {
     dueDate: invoice.dueDate || invoice.due_at,
     amount,
     balance,
-    status
+    status,
+    filename: invoice.filename || ''
   }
 }
 

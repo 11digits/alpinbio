@@ -154,11 +154,27 @@
                   </span>
                 </td>
                 <td class="px-4 py-3">{{ formatDate(invoice.dueDate) }}</td>
-                <td class="px-4 py-3 text-right">
+                <td class="px-4 py-3 text-right flex items-center gap-3 justify-end" @click.stop>
+                  <!-- Download PDF -->
+                  <a
+                    v-if="invoice.filename && invoice.filename !== ''"
+                    :href="`https://api.alpinbio.ro/invoice-pdf/${invoice.id}`"
+                    target="_blank"
+                    rel="noopener noreferrer external"
+                    download
+                    class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
+                    @click.stop
+                  >
+                    <ArrowDownTrayIcon class="h-4 w-4" />
+                    Descarcă
+                  </a>
+
+                  <!-- Pay button -->
                   <RouterLink
                     v-if="invoice.status === 'unpaid'"
                     :to="`/pay/${invoice.id}`"
                     class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50"
+                    @click.stop
                   >
                     Plătește
                     <ArrowRightIcon class="h-4 w-4" />
@@ -247,12 +263,26 @@
               <span>{{ formatDate(invoice.dueDate) }}</span>
             </div>
 
-            <div class="mt-4 flex justify-end">
+            <div class="mt-4 flex justify-end gap-3" @click.stop>
+              <!-- Download -->
+              <a
+                v-if="invoice.filename && invoice.filename !== ''"
+                :href="`https://api.alpinbio.ro/invoice-pdf/${invoice.id}`"
+                target="_blank"
+                rel="noopener noreferrer external"
+                download
+                class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
+              >
+                <ArrowDownTrayIcon class="h-4 w-4" />
+                Descarcă
+              </a>
+
+
+              <!-- Pay -->
               <RouterLink
                 v-if="invoice.status === 'unpaid'"
                 :to="`/pay/${invoice.id}`"
-                class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50"
-                @click.stop
+                class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition hover:bg-emerald-50"
               >
                 Plătește
                 <ArrowRightIcon class="h-4 w-4" />
@@ -293,9 +323,9 @@ import {
   ArrowsUpDownIcon,
   CalendarDaysIcon,
   CheckCircleIcon,
-  CreditCardIcon,
   FunnelIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  ArrowDownTrayIcon
 } from '@heroicons/vue/24/outline'
 import { useAuthStore } from '@/stores/auth'
 import { formatCurrency, formatDate, statusMeta } from '@/utils/formatters'
